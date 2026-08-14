@@ -1,0 +1,18 @@
+# Which picture goes with which signal.
+#
+# Format:   signalname = filename
+# Lines starting with # are ignored. Anything not listed keeps its drawing,
+# and a listed file that isn't here yet just falls back to the drawing too.
+#
+# Signal names you can use:
+#   lion  tiger  eagle  rockroll  bracket  dion
+#   base43  tight44  tight53
+#   flex  cross  karate  g  text  twist  aloha
+#
+# tight53 is Monster. cross is the arms-crossed X — now only Axe uses it.
+# aloha is the Y call (two shakas touching). twist is the two fists twisting.
+
+tiger   = tiger.jpg
+tight53 = monster.jpg
+g       = g.jpg
+text    = text.jpg
