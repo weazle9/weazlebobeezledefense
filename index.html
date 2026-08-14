@@ -1251,12 +1251,11 @@ function solveAlignment(front, lineKey, off, pos, side){
     switch(pos){
       case "D. End":    return {x: deX(off,S,lineKey), y: DL_Y};
       case "D. Tackle": return {x: dtX(off,S,front,lineKey), y: DL_Y};
-      // Axe puts them in their own B gaps, Split in their own A gaps, G on the tackles
-      case "Mike":      return gapCall(lineKey) ? {x: b + s*lbGap(lineKey,"strong"), y: LOS+5}
-                                                : {x: b, y: LOS+5};
+      /* In Base the backers don't move for a line call or a stunt — Mike stays
+         over the ball, Sam and Will stay outside their ends. */
+      case "Mike":      return {x: b, y: LOS+5};
       case "Sam":       return {x: obX(off,s,lineKey,2.2), y: LOS+4};
-      case "Will":      return gapCall(lineKey) ? {x: b + w*lbGap(lineKey,"weak"), y: LOS+5}
-                                                : {x: obX(off,w,lineKey,2.2), y: LOS+4};
+      case "Will":      return {x: obX(off,w,lineKey,2.2), y: LOS+4};
       // Sam already has the strong side, so the Bandit sets up weak.
       case "Bandit":    return {x: deX(off,w,lineKey)+w*1.3, y: LOS+11};
       case "Safety":    return {x: deX(off,s,lineKey)+s*1.3, y: LOS+11};
