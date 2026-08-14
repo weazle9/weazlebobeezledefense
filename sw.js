@@ -1,6 +1,6 @@
 /* Lancer Defense — offline cache.
    Bump CACHE when you upload a new build so kids pick it up. */
-const CACHE = "lancer-defense-v1.1.0";
+const CACHE = "lancer-defense-v1.2.0";
 const FILES = ["./", "./index.html", "./TennysonHighLogo.webp"];
 
 self.addEventListener("install", e => {

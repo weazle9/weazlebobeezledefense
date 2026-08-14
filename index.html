@@ -103,6 +103,14 @@ label.f>span{display:block;font-size:12.5px;color:var(--muted);margin-bottom:5px
 @keyframes tap{from{transform:translate(2px,2px)}to{transform:translate(-2px,-2px)}}
 .mv-sweep{transform-origin:50% 100%;animation:sweep .8s ease-in-out infinite alternate}
 @keyframes sweep{from{transform:translateX(-5px)}to{transform:translateX(5px)}}
+.mv-push{transform-origin:50% 0%;animation:pushdown .7s ease-in infinite}
+@keyframes pushdown{0%{transform:translateY(-6px)}55%{transform:translateY(0)}100%{transform:translateY(-6px)}}
+.mv-crash1{animation:crash1 .55s ease-in infinite alternate}
+.mv-crash2{animation:crash2 .55s ease-in infinite alternate}
+@keyframes crash1{from{transform:translateX(-6px)}to{transform:translateX(0)}}
+@keyframes crash2{from{transform:translateX(6px)}to{transform:translateX(0)}}
+.mv-cut{animation:cutthroat .7s ease-in-out infinite alternate}
+@keyframes cutthroat{from{transform:translateX(7px)}to{transform:translateX(-7px)}}
 .mv-roll{transform-origin:50% 50%;animation:rollo .9s linear infinite}
 @keyframes rollo{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 .mv-pump{animation:pump .45s ease-in-out infinite alternate}
@@ -185,6 +193,7 @@ th{color:var(--muted);font-weight:600;font-size:12.5px;text-transform:uppercase;
         <label class="f" id="bCovBox"><span>Coverage</span><select id="bCov" class="inp"></select></label>
         <label class="f"><span>Line Call</span><select id="bLine" class="inp"></select></label>
         <label class="f" id="bLine2Box"><span>and</span><select id="bLine2" class="inp"></select></label>
+        <label class="f"><span>Fake</span><select id="bFake" class="inp"></select></label>
         <label class="f"><span>Blitz</span><select id="bBlitz" class="inp"></select></label>
         <label class="row tiny muted" style="gap:6px;cursor:pointer;margin-bottom:8px">
           <input type="checkbox" id="bRoll"> Roll into another front</label>
@@ -347,10 +356,15 @@ th{color:var(--muted);font-weight:600;font-size:12.5px;text-transform:uppercase;
         </div>
         <label class="f"><span>Which one</span><select id="pStunt" class="inp"></select></label>
         <label class="f"><span>Draw it from this front</span><select id="pFront" class="inp"></select></label>
-        <label class="row tiny muted" style="gap:6px;cursor:pointer;margin-top:-6px">
-          <input type="checkbox" id="pPerFront"> This man runs it differently per front</label>
-        <p class="muted tiny">Off: one path, stored as steps from where he lines up, so it
-          works out of every front. On: each front gets its own path.</p>
+        <label class="f"><span>…with this line call</span><select id="pLine" class="inp"></select></label>
+        <label class="f"><span>This man's path is</span><select id="pScope" class="inp">
+          <option value="one">the same everywhere</option>
+          <option value="front">different per front</option>
+          <option value="frontline">different per front and line call</option>
+        </select></label>
+        <label class="f"><span>What it does</span>
+          <textarea class="inp" id="pDesc" rows="2"
+            placeholder="Shows on the playbook card instead of the default wording."></textarea></label>
         <h3 style="margin-top:4px">Who's moving</h3>
         <div id="pMovers"></div>
         <div class="row" style="margin-top:10px">
@@ -575,14 +589,26 @@ const LINECALLS = [
   desc:"Both D Tackles head up on the guards. 2 tech.", who:"D. Tackle" },
 { key:"y",     name:"Y",     sig:"aloha",   sigText:"Two shakas touching thumbs.",
   desc:"D End lines up wide.", who:"D. End" },
+{ key:"surf",  name:"Surf",  sig:"surf",    sigText:"Both palms pushing down.",
+  desc:"Don't go upfield. Shoulders square to the line, eyes on the quarterback, shuffle down the line to play both the QB and the handoff. Both ends unless one is called, and in Monster it's the weak End and the Sam.",
+  who:"D. End" },
+{ key:"crash", name:"Crash", sig:"crash",   sigText:"Two palms crashing together.",
+  desc:"Off Split — both D Tackles crash from their B gaps into the A gaps.",
+  who:"D. Tackle", requiresLine:"split" },
+{ key:"starboard", name:"Starboard", sig:"starboard",
+  sigText:"Both fists straight out to the sides, like a T.",
+  desc:"Both D Tackles and the right D End shoot diagonally forward right. Left end surfs.", who:"D. Line" },
+{ key:"port",  name:"Port",  sig:"port",
+  sigText:"One arm straight out to the side, the other elbow up with the fist on the chest.",
+  desc:"Both D Tackles and the left D End shoot diagonally forward left. Right end surfs.", who:"D. Line" },
 /* Text and Twist never get called on their own — they come attached to the
    alignment that sets them up, so the call is Split-Text or Axe-Twist. */
-{ key:"splittext", name:"Split-Text", sigs:["karate","text"],
-  sigText:"Chop down at the stomach, then dialing a phone.",
+{ key:"splittext", name:"Split-Text", sig:"text",
+  sigText:"Dialing a phone.",
   desc:"Split: both D Tackles line up B gap, 3 tech. Text: D End and D Tackle cross and switch gaps — end shoots into B, tackle goes behind and around the edge.",
   who:"D. End / D. Tackle" },
-{ key:"axetwist", name:"Axe-Twist", sigs:["cross","twist"],
-  sigText:"Arms cross into an X, then two fists twisting.",
+{ key:"axetwist", name:"Axe-Twist", sig:"twist",
+  sigText:"Two fists twisting around each other.",
   desc:"Axe: both D Tackles line up A gap, 2i tech. Twist: D Tackles cross and switch gaps — faster one shoots into A, the other goes behind into the opposite A.",
   who:"D. Tackle" }
 ];
@@ -687,6 +713,17 @@ const SIGNALS = {
   blitzBlast: () => svgWrap(`<path class="hi" d="M38 42 L30 48 L44 46"/><path class="hand" d="M44 46 L56 42 M44 46 L46 38" stroke-width="3.2"/><path class="hi" d="M62 42 L70 48 L56 46"/><path class="hand" d="M56 46 L44 42 M56 46 L54 38" stroke-width="3.2"/>`),
   /* Cover 0 — both hands make a zero above the head */
   cover0: () => svgWrap(`<path class="hi" d="M38 42 L28 30 L38 18"/><path class="hi" d="M62 42 L72 30 L62 18"/><circle class="hand" cx="50" cy="14" r="9" fill="none" stroke-width="3.4"/>`),
+
+  /* Surf — both palms pushing down */
+  surf: () => svgWrap(`<g class="mv mv-push"><path class="hi" d="M38 42 L34 54 L46 58"/><rect class="hand" x="44" y="55" width="12" height="5" rx="1.6"/><path class="hi" d="M62 42 L66 54 L54 62"/><rect class="hand" x="44" y="60" width="12" height="5" rx="1.6"/></g><path class="hi" d="M50 70 v7 M44 70 v5 M56 70 v5" stroke-width="2.2"/>`),
+  /* Crash — two palms crashing together */
+  crash: () => svgWrap(`<g class="mv mv-crash1"><path class="hi" d="M38 42 L30 50 L44 50"/><rect class="hand" x="42" y="45" width="6" height="11" rx="1.6"/></g><g class="mv mv-crash2"><path class="hi" d="M62 42 L70 50 L56 50"/><rect class="hand" x="52" y="45" width="6" height="11" rx="1.6"/></g><path class="hi" d="M50 38 v-5 M42 41 l-5 -4 M58 41 l5 -4" stroke-width="2.2"/>`),
+  /* Starboard — both fists straight out, a T pose */
+  starboard: () => svgWrap(`<path class="hi" d="M38 42 H14"/><circle class="hand" cx="11" cy="42" r="5"/><path class="hi" d="M62 42 H86"/><circle class="hand" cx="89" cy="42" r="5"/>`),
+  /* Port — one arm out, the other fist on the chest */
+  port: () => svgWrap(`<path class="hi" d="M62 42 H86"/><circle class="hand" cx="89" cy="42" r="5"/><path class="hi" d="M38 42 L20 42 L44 50"/><circle class="hand" cx="46" cy="50" r="5"/>`),
+  /* Fake — flat hand cutting across the throat */
+  fake: () => svgWrap(`<path d="M38 42 L30 62 L34 78"/><g class="mv mv-cut"><path class="hi" d="M62 42 L70 38 L58 33"/><rect class="hand" x="42" y="30" width="15" height="5" rx="1.6"/></g>`),
 
   /* Roll — fists rolling over each other */
   roll: () => svgWrap(`<path d="M38 42 L33 50 L42 48"/><path d="M62 42 L67 50 L58 48"/><g class="mv mv-roll"><circle class="hand" cx="44" cy="48" r="5"/><circle class="hand" cx="56" cy="48" r="5"/></g><path class="hi" d="M40 40 q10 -6 20 0" stroke-width="2.2"/><path class="hi" d="M60 56 q-10 6 -20 0" stroke-width="2.2"/>`),
@@ -1071,7 +1108,11 @@ function playersToOffense(players, ballX, name){
   const P = players.map(p=>({lab:p.lab, t:p.t, att:p.att,
                              x:clampX(ballX + p.dx), y:p.y,
                              side: p.dx < 0 ? -1 : 1}));
-  const te = P.find(p=>p.t === "te");
+  /* A tight end only sets strength if there's one of him. Two tight ends —
+     one on each end of the line — settles nothing, so the rule falls through. */
+  const tes = P.filter(p=>p.t === "te" && p.att);
+  const teLeft  = tes.some(p=>p.x < ballX), teRight = tes.some(p=>p.x > ballX);
+  const te = (teLeft && teRight) ? null : tes[0];
   const rb = P.find(p=>p.t === "rb");
   const count = side => P.filter(p=>(p.t==="wr"||p.t==="te") && (p.x-ballX)*side > 0).length;
   const trips = count(1) >= 3 ? 1 : count(-1) >= 3 ? -1 : 0;
@@ -1265,14 +1306,24 @@ const hasLine = (k,name) => lineParts(k).includes(name);
    different people — Axe and Split both set the tackles, so they can't. */
 const LINE_GROUP = { axe:"tackles", split:"tackles", g:"tackles",
                      splittext:"tackles", axetwist:"tackles",
-                     flex:"ends", y:"ends" };
+                     crash:"tacklemove", text:"tacklemove", twist:"tacklemove",
+                     flex:"ends", y:"ends", surf:"ends",
+                     starboard:"linemove", port:"linemove" };
 const lineGroup = k => LINE_GROUP[k] || k;
-const canCombine = (a,b) => a!=="none" && b!=="none" && a!==b && lineGroup(a)!==lineGroup(b);
+/* Some calls only exist off another one — Crash is the tackles' movement out
+   of Split, so it can't be called on its own. */
+const lineRequires = k => (LINECALLS.find(l=>l.key===k)||{}).requiresLine || null;
+const canCombine = (a,b) =>
+  a!=="none" && b!=="none" && a!==b &&
+  lineGroup(a)!==lineGroup(b) &&
+  (!lineRequires(b) || lineRequires(b) === a) &&
+  (!lineRequires(a) || lineRequires(a) === b);
 
 /* Line calls that pull the inside backers into a gap of their own. */
 const gapCall = lk => lineParts(lk).some(p=>["axe","axetwist","split","splittext","g"].includes(p));
 function lbGap(lineKey, side){
-  if(hasLine(lineKey,"g"))                                  return OL_T;   // stacked on the tackles
+  // G puts the D Tackles head up on the guards, and the backers stack behind THEM
+  if(hasLine(lineKey,"g"))                                  return TECH["2"];
   if(hasLine(lineKey,"axe")   || hasLine(lineKey,"axetwist"))  return B_GAP;
   if(hasLine(lineKey,"split") || hasLine(lineKey,"splittext")) return A_GAP;
   return side === "strong" ? A_GAP : B_GAP;      // base rule: Mike strong A, Will weak B
@@ -1510,6 +1561,7 @@ function signalCatalog(){
   LINECALLS.filter(l=>l.sig).forEach(l=> all.push({name:l.name, sig:l.sig, text:l.sigText, group:"line"}));
   BLITZES.filter(b=>b.sig).forEach(b=> all.push({name:b.name, sig:b.sig, text:b.sigText, group:"blitz"}));
   all.push({name:"Roll", sig:"roll", text:"Fists rolling over each other.", group:"line"});
+  all.push({name:"Fake", sig:"fake", text:"Flat hand cutting across the throat.", group:"line"});
   return all;
 }
 /* Built on first use — the blitz list isn't defined yet when this file loads. */
@@ -1648,12 +1700,21 @@ function qAlign(pos, scout){
 
   /* Trips is always Rock & Roll and bunch is always Bracket — it isn't a
      choice. Both cancel the front, so the line just plays a four-man look. */
+  /* Against a scouted look we ask what WE call against it — not a front we'd
+     never be in. Your written call beats any rule I'd infer from the picture. */
+  const sc = off.scout ? off.scout.play.call : null;
+
   const surface = surfaceKind(off);
-  const forced = surface === "trips" ? "rockroll"
+  const forced = sc ? null
+               : surface === "trips" ? "rockroll"
                : surface === "bunch" ? "bracket" : null;
 
-  const front   = forced ? FRONTS.find(f=>f.key==="base43") : rnd(FRONTS);
-  const lineKey = forced ? "none" : rnd(legalLineCalls(front.key));
+  const front = forced ? FRONTS.find(f=>f.key==="base43")
+              : sc     ? (FRONTS.find(f=>f.key===sc.front) || FRONTS[0])
+                       : rnd(FRONTS);
+  const lineKey = forced ? "none"
+                : sc     ? (sc.line || "none")
+                         : rnd(legalLineCalls(front.key));
 
   const askPos = pos;
 
@@ -1663,6 +1724,10 @@ function qAlign(pos, scout){
   let covKey = null;
   if(!isLineman){
     if(forced && COV_ALIGN[forced].pos[askPos]) covKey = forced;
+    else if(sc){
+      const k = COV_KEY_BY_NAME[sc.cov];
+      if(k && COV_ALIGN[k] && COV_ALIGN[k].pos[askPos]) covKey = k;
+    }
     else if(!forced && Math.random() < 0.45){
       const usable = Object.keys(COV_ALIGN).filter(k =>{
         const cov = COVERAGES.find(c=>c.name === COV_ALIGN[k].label);
@@ -1691,11 +1756,19 @@ function qAlign(pos, scout){
     if((TWO_SIDED[front.key]||[]).includes(askPos)) side = Math.random()<0.5 ? "playside" : "away";
     target = solveAlignment(front.key, lineKey, off, askPos, side==="away" ? "weak" : side ? "strong" : null);
     // the call is still Rock & Roll or Bracket — the line just plays a four-man look under it
-    if(forced){
-      covName = " " + COV_ALIGN[forced].label;
-      statKey = forced;
-      covWhy = `${COV_ALIGN[forced].label} doesn't move the line. Align off the four-man front.`;
+    const standaloneName = forced ? COV_ALIGN[forced].label
+      : (sc && (COVERAGES.find(x=>x.name===sc.cov)||{}).standalone) ? sc.cov : null;
+    if(standaloneName){
+      covName = " " + standaloneName;
+      statKey = COV_KEY_BY_NAME[standaloneName] || front.key;
+      covWhy = `${standaloneName} doesn't move the line. Align off the four-man front.`;
     }
+  }
+  /* If you dragged this man somewhere on this play, that's the answer. */
+  const ov = off.scout && defOverride(off.scout.play, front.key, askPos, side, off.ball);
+  if(ov){
+    target = ov;
+    covWhy = `You set this one yourself for <b>${off.scout.play.name}</b>.`;
   }
   if(!target) return null;
 
@@ -2638,6 +2711,41 @@ const DEFAULT_STUNTS = {
         },
         "scope": "frontline"
       }
+    ]
+  },
+  "surf": {
+    "label": "Surf", "kind": "line",
+    "movers": [
+      { "pos": "D. End", "side": "strong", "delay": 0, "dur": 1.1, "ease": "inout",
+        "pts": [[-1.6, 0.2], [-2.8, 0.1]] },
+      { "pos": "D. End", "side": "weak", "delay": 0, "dur": 1.1, "ease": "inout",
+        "pts": [[1.6, 0.2], [2.8, 0.1]] }
+    ]
+  },
+  "starboard": {
+    "label": "Starboard", "kind": "line", "abs": true,
+    "movers": [
+      { "pos": "D. Tackle", "absSide": "right", "delay": 0, "dur": 0.9, "ease": "out",
+        "pts": [[1.2, -1.8], [2.4, -3.8]] },
+      { "pos": "D. Tackle", "absSide": "left", "delay": 0, "dur": 0.9, "ease": "out",
+        "pts": [[1.2, -1.8], [2.4, -3.8]] },
+      { "pos": "D. End", "absSide": "right", "delay": 0, "dur": 0.9, "ease": "out",
+        "pts": [[1.4, -2], [2.8, -4.2]] },
+      { "pos": "D. End", "absSide": "left", "delay": 0, "dur": 1.1, "ease": "inout",
+        "pts": [[1.6, 0.2], [2.8, 0.1]] }
+    ]
+  },
+  "port": {
+    "label": "Port", "kind": "line", "abs": true,
+    "movers": [
+      { "pos": "D. Tackle", "absSide": "right", "delay": 0, "dur": 0.9, "ease": "out",
+        "pts": [[-1.2, -1.8], [-2.4, -3.8]] },
+      { "pos": "D. Tackle", "absSide": "left", "delay": 0, "dur": 0.9, "ease": "out",
+        "pts": [[-1.2, -1.8], [-2.4, -3.8]] },
+      { "pos": "D. End", "absSide": "left", "delay": 0, "dur": 0.9, "ease": "out",
+        "pts": [[-1.4, -2], [-2.8, -4.2]] },
+      { "pos": "D. End", "absSide": "right", "delay": 0, "dur": 1.1, "ease": "inout",
+        "pts": [[-1.6, 0.2], [-2.8, 0.1]] }
     ]
   },
   "gas": {
@@ -7328,6 +7436,18 @@ function restoreCustomCalls(){
     }
   });
 }
+/* Calls you made yourself that stand in for a built-in one. The custom entry
+   takes the built-in's signal and wording; "replace" also retires the original. */
+const CALL_ALIAS = {
+  text:  {from:"splittext", replace:true, requires:"split", group:"tacklemove",
+          who:"D. End / D. Tackle",
+          desc:"Off Split — D End and D Tackle cross and switch gaps. End shoots into B, tackle goes behind and around the edge."},
+  twist: {from:"axetwist",  replace:true, requires:"axe", group:"tacklemove",
+          who:"D. Tackle",
+          desc:"Off Axe — D Tackles cross and switch gaps. Faster one shoots into A, the other goes behind into the opposite A."},
+  blastsplitcrash: {from:"blast", replace:false}
+};
+
 /* Blitzes are their own call, separate from the line stunts. */
 const BLITZES = [{key:"none", name:"—", desc:"No blitz."}];
 /* Signals for the four backer blitzes, kept out of the saved data block. */
@@ -7339,24 +7459,71 @@ const BLITZ_SIG = {
   gas:    {sig:"blitzGas",    text:"Like G, but the fists pump up and down."},
   blast:  {sig:"blitzBlast",  text:"Two finger guns."}
 };
+/* Fold a custom call onto the built-in it replaces: it inherits the signal and
+   the wording, and the paths too if you hadn't drawn any yet. */
+function applyCallAliases(){
+  Object.entries(CALL_ALIAS).forEach(([key, a])=>{
+    if(!STUNTS[key]) return;
+    const src = STUNTS[a.from];
+    const list = STUNTS[key].kind === "blitz" ? BLITZES : LINECALLS;
+    const srcList = (src && src.kind === "blitz") ? BLITZES : LINECALLS;
+    const srcEntry = srcList.find(x=>x.key === a.from);
+    const dstEntry = list.find(x=>x.key === key);
+    if(srcEntry && dstEntry){
+      ["sig","sigText","desc","who","requiresLine"].forEach(f=>{
+        if(srcEntry[f] !== undefined) dstEntry[f] = srcEntry[f];
+      });
+      dstEntry.name = STUNTS[key].label;
+      if(a.requires) dstEntry.requiresLine = a.requires;
+      if(a.desc)     dstEntry.desc = a.desc;
+      if(a.who)      dstEntry.who = a.who;
+      if(a.group)    LINE_GROUP[key] = a.group;
+    }
+    if(src && (!STUNTS[key].movers || !STUNTS[key].movers.length))
+      STUNTS[key].movers = JSON.parse(JSON.stringify(src.movers || []));
+    if(src && src.abs) STUNTS[key].abs = true;
+    if(a.replace){
+      delete STUNTS[a.from];
+      const i = srcList.findIndex(x=>x.key === a.from);
+      if(i >= 0) srcList.splice(i,1);
+    }
+  });
+}
+
 restoreCustomCalls();
+applyCallAliases();
 
 /* A mover can carry one path for everybody, or a different path per front —
    a Mike blitz out of Tight isn't the same run as out of Base. */
-function moverPts(m, front){
+/* A path can be one shared route, one per front, or one per front AND line
+   call. Reading falls through the levels, so only what you've actually drawn
+   differently gets stored. */
+const ctxKey = (front, line) => `${front}|${line || "none"}`;
+
+function moverPts(m, front, line){
+  if(m.byCtx && m.byCtx[ctxKey(front, line)]) return m.byCtx[ctxKey(front, line)];
   if(m.byFront && m.byFront[front]) return m.byFront[front];
   return m.pts || [];
 }
-function setMoverPts(m, front, pts){
-  if(m.byFront) m.byFront[front] = pts; else m.pts = pts;
+function setMoverPts(m, front, line, pts){
+  if(m.scope === "frontline"){ m.byCtx = m.byCtx || {}; m.byCtx[ctxKey(front, line)] = pts; }
+  else if(m.scope === "front" || m.byFront){ m.byFront = m.byFront || {}; m.byFront[front] = pts; }
+  else m.pts = pts;
 }
-/* Split a shared path so this front can be drawn on its own. */
-function splitByFront(m){
-  if(m.byFront) return;
-  m.byFront = {};
-  FRONTS.forEach(f=> m.byFront[f.key] = JSON.parse(JSON.stringify(m.pts || [])));
-  delete m.pts;
+function setScope(m, scope, front, line){
+  const cur = JSON.parse(JSON.stringify(moverPts(m, front, line)));
+  if(scope === "one"){ m.pts = cur; delete m.byFront; delete m.byCtx; delete m.scope; }
+  else if(scope === "front"){
+    m.byFront = m.byFront || {};
+    FRONTS.forEach(f=>{ if(!m.byFront[f.key]) m.byFront[f.key] = JSON.parse(JSON.stringify(cur)); });
+    delete m.byCtx; delete m.pts; m.scope = "front";
+  } else {
+    m.byCtx = m.byCtx || {};
+    if(!m.byCtx[ctxKey(front, line)]) m.byCtx[ctxKey(front, line)] = cur;
+    m.scope = "frontline";
+  }
 }
+const moverScope = m => m.scope || (m.byCtx ? "frontline" : m.byFront ? "front" : "one");
 
 /* Turn stored offsets into absolute field positions, starting from wherever
    this man lines up in THIS front and line call. */
@@ -7364,16 +7531,22 @@ function stuntPlan(key, off, front, lineKey){
   const d = STUNTS[key];
   if(!d) return null;
   const f = front || "base43";
+  /* Most calls mirror with the strength. Starboard and Port don't — right is
+     right whichever way the offence sets, so they're stored absolute and name
+     the man by the side of the field he's on. */
+  const sign = d.abs ? 1 : off.strength;
   const movers = d.movers.map(m=>{
-    const home = solveAlignment(f, lineKey || key, off, m.pos, m.side || null);
+    let side = m.side;
+    if(m.absSide) side = ((m.absSide === "right") === (off.strength > 0)) ? "strong" : "weak";
+    const home = solveAlignment(f, lineKey || key, off, m.pos, side || null);
     if(!home) return null;
-    const pts = moverPts(m, f);
+    const pts = moverPts(m, f, lineKey);
     if(!pts.length) return null;                  // he doesn't go on this front
     // Bandit, Safety and Corner get tagged with a side by defenseFor even when
     // the mover doesn't name one — match on the position prefix in that case.
-    const sel = m.side ? `[data-def="${m.pos}|${m.side}"]` : `[data-def^="${m.pos}|"]`;
+    const sel = side ? `[data-def="${m.pos}|${side}"]` : `[data-def^="${m.pos}|"]`;
     return { sel, delay:m.delay, dur:m.dur, ease:m.ease,
-             pts:pts.map(p=>[home.x + p[0]*off.strength, home.y + p[1]]) };
+             pts:pts.map(p=>[home.x + p[0]*sign, home.y + p[1]]) };
   }).filter(Boolean);
   return { label:d.label, movers };
 }
@@ -7628,6 +7801,24 @@ let builderDir = 1;      // which way the formation is set; the flip button swap
 let builderRoll = false; // Base rolls into Tight and Tight rolls into Base
 
 const ROLL_TIME = 1.1;
+let builderFake = "none";     // which blitz we show without running
+
+/* A fake creeps up toward where he'd blitz from, then retreats to his spot.
+   Only the backer sells it — the linemen that come with the real blitz stay
+   exactly where they are, because nothing is actually being run. */
+const FAKERS = ["Mike","Will","Sam","Bandit"];
+function fakePlan(key, off, front, lineKey){
+  const plan = stuntPlan(key, off, front, lineKey);
+  if(!plan) return null;
+  const backers = plan.movers.filter(m=>FAKERS.some(x=>m.sel.includes(`"${x}|`)));
+  return { label:"Fake " + plan.label, movers: backers.map(m=>{
+    const first = m.pts[0];
+    const g = document.querySelector(m.sel + " circle");
+    const home = g ? [+g.dataset.hx, +g.dataset.hy] : first;
+    const show = [home[0] + (first[0]-home[0])*0.6, home[1] + (first[1]-home[1])*0.6];
+    return { sel:m.sel, pts:[show, show, home], delay:0, dur:STUNT_TIME, ease:"inout" };
+  })};
+}
 
 /* Movers that walk every defender from where he starts to where he ends up
    after the shift. Same engine the stunts use. */
@@ -7748,6 +7939,7 @@ function renderBuilder(){
   // one object standing in for the pair, so the rest of the builder is unchanged
   const l = { key: [l1.key, l2 ? l2.key : null].filter(k=>k && k!=="none").join("+") || "none",
               name: [l1.key!=="none"?l1.name:null, l2?l2.name:null].filter(Boolean).join(" "),
+              sigs: [l1.key!=="none"?l1.sig:null, l2?l2.sig:null].filter(Boolean),
               desc: [l1.key!=="none"?l1.desc:null, l2?l2.desc:null].filter(Boolean).join(" ") };
   const z = BLITZES[+document.getElementById("bBlitz").value] || BLITZES[0];
   // Rock & Roll and Bracket are the whole call — no front in front of them.
@@ -7758,38 +7950,56 @@ function renderBuilder(){
   const rl = rolling
     ? { key: [rl1.key, rl2?rl2.key:null].filter(k=>k && k!=="none").join("+") || "none",
         name: [rl1.key!=="none"?rl1.name:null, rl2?rl2.name:null].filter(Boolean).join(" "),
+        sigs: [rl1.key!=="none"?rl1.sig:null, rl2?rl2.sig:null].filter(Boolean),
         desc: [rl1.key!=="none"?rl1.desc:null, rl2?rl2.desc:null].filter(Boolean).join(" ") }
     : null;
-  const blitzTail = z.key!=="none" ? " "+z.name : "";
+  const fk = BLITZES.find(b=>b.key === builderFake);
+  const fakeTail  = (fk && fk.key!=="none") ? " Fake "+fk.name : "";
+  const blitzTail = (z.key!=="none" ? " "+z.name : "");
 
   /* "Base Axe, roll Tight Tiger Split" — first look, then the call we end in. */
+  /* Zero is never called out loud — it comes with the blitz. It goes on the
+     end so the kids still learn the signal without it interrupting the call. */
+  const covWord = c.blitzOnly ? "" : c.name;
+  const covTail = c.blitzOnly ? " "+c.name : "";
   const call = rolling
-    ? `${f.name}${l.key!=="none" ? " "+l.name : ""}, roll ${rf.name} ${c.name}` +
-      `${rl.key!=="none" ? " "+rl.name : ""}${blitzTail}`
-    : `${c.standalone ? "" : f.name+" "}${c.name}` +
-      `${l.key!=="none" ? " "+l.name : ""}${blitzTail}`;
+    ? `${f.name}${l.key!=="none" ? " "+l.name : ""}, roll ${rf.name}` +
+      `${covWord ? " "+covWord : ""}${rl.key!=="none" ? " "+rl.name : ""}` +
+      `${fakeTail}${blitzTail}${covTail}`
+    : `${c.standalone ? "" : f.name}${covWord ? (c.standalone?"":" ")+covWord : ""}` +
+      `${l.key!=="none" ? " "+l.name : ""}${fakeTail}${blitzTail}${covTail}`;
 
   // after a roll, the defence you actually play is the second front and line call
   const playFront = rolling ? rf.key : f.key;
   const playLine  = rolling ? rl.key : l.key;
+
+  /* Signals in the order you'd actually give them: front, line call, roll,
+     second front, coverage, second line call, fake, blitz — Zero last. */
+  const sigsOf = lc => lc.sigs || (lc.sig ? [lc.sig] : []);
+  const sigOrder = [];
+  if(!c.standalone) sigOrder.push(f.sig);
+  if(rolling){ sigsOf(l).forEach(k=>sigOrder.push(k)); sigOrder.push("roll"); sigOrder.push(rf.sig); }
+  if(!c.blitzOnly && c.sig) sigOrder.push(c.sig);
+  sigsOf(rolling ? rl : l).forEach(k=>sigOrder.push(k));
+  if(fk && fk.key!=="none"){ sigOrder.push("fake"); if(fk.sig) sigOrder.push(fk.sig); }
+  if(z.key!=="none" && z.sig) sigOrder.push(z.sig);
+  if(c.blitzOnly && c.sig) sigOrder.push(c.sig);
   let html = `<div class="card" style="background:var(--panel-2);margin:0">
     <div class="muted tiny" style="text-transform:uppercase;letter-spacing:1px">The call</div>
     <div style="font-size:26px;font-weight:800;margin:6px 0 14px">${call}</div>
     <div class="row" style="gap:8px;margin-bottom:12px">
-      <div class="sigbox" style="width:74px;flex:0 0 74px">${sigMedia(f.sig)}</div>
-      <div class="sigbox" style="width:74px;flex:0 0 74px">${sigMedia(c.sig)}</div>
-      ${(l.sigs||(l.sig?[l.sig]:[])).map(k=>`<div class="sigbox" style="width:74px;flex:0 0 74px">${sigMedia(k)}</div>`).join("")}
+      ${sigOrder.map(k=>`<div class="sigbox" style="width:74px;flex:0 0 74px">${sigMedia(k)}</div>`).join("")}
     </div>
     <div class="rule"><b>Front — ${f.name} ${f.textbook}</b>${f.sigText}</div>
-    <div class="rule"><b>Coverage — ${c.name} <span class="muted">(${c.textbook})</span></b>${c.sigText}</div>
+    ${!c.blitzOnly?`<div class="rule"><b>Coverage — ${c.name} <span class="muted">(${c.textbook})</span></b>${c.sigText}</div>`:""}
     ${l.key!=="none"?`<div class="rule"><b>Line call — ${l.name}</b>${l.desc}</div>`:""}
+    ${fk&&fk.key!=="none"?`<div class="rule" style="border-left-color:#d8a33c"><b>Fake — ${fk.name}</b>
+      Flat hand cutting across the throat, then ${fk.sigText||"the blitz signal."} Show it and get
+      back. Nobody actually goes, so the coverage stands.</div>`:""}
     ${z.key!=="none"?`<div class="rule"><b>Blitz — ${z.name}</b>${z.desc}</div>`:""}
+    ${c.blitzOnly?`<div class="rule"><b>Coverage — ${c.name} <span class="muted">(${c.textbook})</span></b>${c.sigText} Comes with the blitz — never called on its own.</div>`:""}
     ${c.standalone?`<div class="rule" style="border-left-color:#d8a33c"><b>This cancels the call before it</b>
       Front, coverage and blitz all die. If they motion out of it, we go back to what was called.</div>`:""}
-    ${rolling?`<div class="row" style="gap:8px;align-items:flex-start;margin:10px 0">
-      <div class="sigbox" style="width:74px;flex:0 0 74px">${sigMedia("roll")}</div>
-      <div class="tiny muted" style="padding-top:6px">Signal: fists rolling over each other.</div>
-    </div>`:""}
     ${rolling?`<div class="rule" style="border-left-color:#6fbf8f"><b>Roll</b>Line up in
       ${f.name} ${f.textbook}${l.key!=="none"?" "+l.name:""}, then shift to
       ${rf.name} ${rf.textbook}${rl.key!=="none"?" "+rl.name:""} before the snap.
@@ -7854,15 +8064,15 @@ function renderBuilder(){
          <input type="checkbox" id="bZones" ${showZones?"checked":""}> Show zones</label>
        <span class="muted">${zoneList.length ? zoneList.join(" · ") : "This call has no zone areas — it's man."}</span>
      </div>
-     ${(lineParts(playLine).some(k=>STUNTS[k]) || STUNTS[z.key] || rolling) ? `<div class="row" style="margin-top:10px;gap:8px">
-        <button class="btn sm" id="bPlay">▶ Run ${[rolling&&"the roll", lineParts(playLine).filter(k=>STUNTS[k]).map(k=>STUNTS[k].label).join(" + ")||null, STUNTS[z.key]&&z.name].filter(Boolean).join(" + ")}</button>
+     ${(lineParts(playLine).some(k=>STUNTS[k]) || STUNTS[z.key] || STUNTS[builderFake] || rolling) ? `<div class="row" style="margin-top:10px;gap:8px">
+        <button class="btn sm" id="bPlay">▶ Run ${[rolling&&"the roll", lineParts(playLine).filter(k=>STUNTS[k]).map(k=>STUNTS[k].label).join(" + ")||null, fk&&fk.key!=="none"&&("Fake "+fk.name), STUNTS[z.key]&&z.name].filter(Boolean).join(" + ")}</button>
         <button class="btn ghost sm" id="bReset">Reset</button>
         <label class="row tiny muted" style="gap:6px;cursor:pointer">
           <input type="checkbox" id="bSlow" ${stuntSlow?"checked":""}> Half speed</label>
       </div>` : ""}
      ${banned?`<div class="warnbox tiny" style="margin-top:8px">You don't call <b>${c.name}</b> out of <b>${f.name}</b>. Shown for reference — it never comes up in the quizzes.</div>`:""}`;
   document.getElementById("bZones").onchange = e => { showZones = e.target.checked; renderBuilder(); };
-  if(lineParts(playLine).some(k=>STUNTS[k]) || STUNTS[z.key] || rolling){
+  if(lineParts(playLine).some(k=>STUNTS[k]) || STUNTS[z.key] || STUNTS[builderFake] || rolling){
     document.getElementById("bPlay").onclick = ()=>{
       const svg = document.querySelector("#bField svg");
       // the front shifts first; the stunt fires from where everybody ends up
@@ -7876,6 +8086,17 @@ function renderBuilder(){
         const plan = stuntPlan(k, off, playFront, playLine);
         if(plan) plan.movers.forEach(m=> stunts.push(m));
       });
+
+      /* The fake sells it and gets back. If a man is faking one call and
+         actually sent on another — Fake GAS with Mike going — he really goes;
+         two movers on the same man would fight and the fake would win. */
+      if(builderFake && builderFake !== "none"){
+        const fp = fakePlan(builderFake, off, playFront, playLine);
+        if(fp){
+          const alreadyGoing = new Set(stunts.map(m=>m.sel));
+          fp.movers.forEach(m=>{ if(!alreadyGoing.has(m.sel)) stunts.push(m); });
+        }
+      }
 
       const rollBySel = {};
       roll.forEach(m=> rollBySel[m.sel] = m);
@@ -8003,18 +8224,18 @@ function wireZoneDrag(wrap, off){
    9c. PATH EDITOR  (coach only)
    ============================================================ */
 
-let pStuntKey = "splittext", pMoverIdx = 0, pSlowPreview = false, pFrontKey = "base43";
+let pStuntKey = "splittext", pMoverIdx = 0, pSlowPreview = false, pFrontKey = "base43", pLineKey = "none";
 
 /* The editor always draws strength to the right so the numbers stay readable. */
 function pathOffense(){ const o = builderOffense(); o.strength = 1; return o; }
 
 function moverHome(m, off){
-  return solveAlignment(pFrontKey, pStuntKey, off, m.pos, m.side || null);
+  return solveAlignment(pFrontKey, pLineKey === "none" ? pStuntKey : pLineKey, off, m.pos, m.side || null);
 }
 function moverPath(m, off){
   const h = moverHome(m, off);
   if(!h) return [];
-  return [[h.x, h.y], ...moverPts(m, pFrontKey).map(p=>[h.x + p[0]*off.strength, h.y + p[1]])];
+  return [[h.x, h.y], ...moverPts(m, pFrontKey, pLineKey).map(p=>[h.x + p[0]*off.strength, h.y + p[1]])];
 }
 /* Field position -> the stored offset from this man's own alignment. */
 function toStored(x, y, off, home){
@@ -8036,7 +8257,7 @@ function renderPathEditor(){
   document.getElementById("pMovers").innerHTML = d.movers.map((m,i)=>
     `<div class="row tiny" style="justify-content:space-between;gap:8px;padding:7px 0;border-bottom:1px solid var(--line)">
        <button class="btn ${i===pMoverIdx?"":"ghost"} sm" data-pick="${i}" style="flex:1;text-align:left">
-         ${m.pos} <span class="muted">(${m.side})</span> · ${moverPts(m,pFrontKey).length} dots</button>
+         ${m.pos} <span class="muted">(${m.side})</span> · ${moverPts(m,pFrontKey,pLineKey).length} dots</button>
        <button class="btn ghost sm" data-drop="${i}">Remove</button>
      </div>`).join("") || `<p class="muted tiny">Nobody moves on this call yet.</p>`;
 
@@ -8065,7 +8286,7 @@ function renderPathEditor(){
     || `<option value="">everybody's already moving</option>`;
 
   // ---- field ----
-  const def = defenseFor(pFrontKey, pStuntKey, null, off);
+  const def = defenseFor(pFrontKey, pLineKey === "none" ? pStuntKey : pLineKey, null, off);
   let extra = "";
   d.movers.forEach((mm,i)=>{
     const path = moverPath(mm, off);
@@ -8075,7 +8296,7 @@ function renderPathEditor(){
   });
   const mHome = m ? moverHome(m, off) : null;
   if(m && mHome){
-    moverPts(m, pFrontKey).forEach((p,i)=>{
+    moverPts(m, pFrontKey, pLineKey).forEach((p,i)=>{
       const x = mHome.x + p[0]*off.strength, y = mHome.y + p[1];
       extra += `<g class="pdot" data-i="${i}">
         <circle cx="${x}" cy="${y}" r=".75" fill="#0d1319" stroke="#8cc5e8" stroke-width=".18" style="cursor:grab"/>
@@ -8109,15 +8330,19 @@ function renderPathEditor(){
     b.onclick = ()=>{ pMoverIdx = +b.dataset.pick; renderPathEditor(); });
   document.querySelectorAll("#pMovers [data-drop]").forEach(b=>
     b.onclick = ()=>{ d.movers.splice(+b.dataset.drop,1); pMoverIdx = 0; renderPathEditor(); });
-  const pf = document.getElementById("pPerFront");
-  pf.checked = !!(m && m.byFront);
-  pf.disabled = !m;
-  pf.onchange = ()=>{
-    if(!m) return;
-    if(pf.checked) splitByFront(m);
-    else { m.pts = moverPts(m, pFrontKey); delete m.byFront; }
-    renderPathEditor();
+  const pd = document.getElementById("pDesc");
+  pd.value = d.desc || "";
+  pd.onchange = e=>{
+    d.desc = e.target.value.trim();
+    const entry = (d.kind === "blitz" ? BLITZES : LINECALLS).find(x=>x.key === pStuntKey);
+    if(entry) entry.desc = d.desc || "Added in the Path Editor.";
+    renderPlaybook(); renderBuilder();
   };
+
+  const ps = document.getElementById("pScope");
+  ps.value = m ? moverScope(m) : "one";
+  ps.disabled = !m;
+  ps.onchange = ()=>{ if(m){ setScope(m, ps.value, pFrontKey, pLineKey); renderPathEditor(); } };
 
   if(m){
     document.getElementById("pDelay").onchange = e=>{ m.delay = +e.target.value; };
@@ -8139,7 +8364,7 @@ function wirePathEditor(wrap, off){
     const tag = e.target.tagName;
     if(tag !== "svg" && tag !== "rect" && tag !== "line") return;
     const p = toSvg(e);
-    setMoverPts(m, pFrontKey, moverPts(m,pFrontKey).concat([toStored(p.x, p.y, off, home)]));
+    setMoverPts(m, pFrontKey, pLineKey, moverPts(m,pFrontKey,pLineKey).concat([toStored(p.x, p.y, off, home)]));
     renderPathEditor();
   });
 
@@ -8151,7 +8376,7 @@ function wirePathEditor(wrap, off){
 
     del.addEventListener("pointerdown", e=>{
       e.stopPropagation();
-      const cur = moverPts(m,pFrontKey).slice(); cur.splice(i,1); setMoverPts(m,pFrontKey,cur);
+      const cur = moverPts(m,pFrontKey,pLineKey).slice(); cur.splice(i,1); setMoverPts(m,pFrontKey,pLineKey,cur);
       renderPathEditor();
     });
     g.addEventListener("pointerdown", e=>{
@@ -8164,7 +8389,7 @@ function wirePathEditor(wrap, off){
       const x = Math.max(.8, Math.min(FW-.8, p.x)), y = Math.max(.8, Math.min(FD-.8, p.y));
       circ.setAttribute("cx",x); circ.setAttribute("cy",y);
       label.setAttribute("x",x); label.setAttribute("y",y+.3);
-      const cur2 = moverPts(m,pFrontKey).slice(); cur2[i] = toStored(x, y, off, home); setMoverPts(m,pFrontKey,cur2);
+      const cur2 = moverPts(m,pFrontKey,pLineKey).slice(); cur2[i] = toStored(x, y, off, home); setMoverPts(m,pFrontKey,pLineKey,cur2);
     });
     const stop = ()=>{ if(dragging){ dragging = false; renderPathEditor(); } };
     g.addEventListener("pointerup", stop);
@@ -8176,7 +8401,7 @@ function previewPath(){
   const svg = document.querySelector("#pField svg");
   if(!svg) return;
   const off = pathOffense();
-  const plan = stuntPlan(pStuntKey, off, pFrontKey, pStuntKey);
+  const plan = stuntPlan(pStuntKey, off, pFrontKey, pLineKey === "none" ? pStuntKey : pLineKey);
   if(!plan) return;
   resetStuntIn(svg);
   runMotion(svg, plan.movers.map(m=>({selector:m.sel, ...m})),
@@ -8224,7 +8449,19 @@ function initPathEditor(){
   const fSel = document.getElementById("pFront");
   FRONTS.forEach(f=> fSel.add(new Option(`${f.name} ${f.textbook}`, f.key)));
   fSel.value = pFrontKey;
-  fSel.onchange = ()=>{ pFrontKey = fSel.value; renderPathEditor(); };
+  const lSel = document.getElementById("pLine");
+  function refreshPathLines(){
+    const legal = legalLineCalls(pFrontKey);
+    const keep = pLineKey;
+    lSel.innerHTML = "";
+    LINECALLS.forEach(l=>{ if(legal.includes(l.key) || l.custom)
+      lSel.add(new Option(l.key === "none" ? "No line call" : l.name, l.key)); });
+    pLineKey = [...lSel.options].some(o=>o.value === keep) ? keep : "none";
+    lSel.value = pLineKey;
+  }
+  fSel.onchange = ()=>{ pFrontKey = fSel.value; refreshPathLines(); renderPathEditor(); };
+  lSel.onchange = ()=>{ pLineKey = lSel.value; renderPathEditor(); };
+  refreshPathLines();
 
   const switchKind = k => { pKind = k; pMoverIdx = 0; refreshStuntList(); renderPathEditor(); };
   document.getElementById("pKindLine").onclick  = ()=> switchKind("line");
@@ -8375,6 +8612,7 @@ const newPlay = () => ({
   ball: null,       // who starts with it
   handoff: null,    // {to: playerIndex, at: seconds} — the give on an RPO or a run
   quiz: false,      // only marked plays get asked "what are we in?"
+  defense: {},      // "front|Pos|side" -> [across-from-ball, depth]
   call: {front:"base43", cov:"Lion", line:"none"},
   notes: "",        // the kids read this
   coachNotes: ""    // only you read this
@@ -8492,8 +8730,13 @@ function renderOppDetail(){
     <div class="row" style="gap:6px;margin-bottom:6px">
       <button class="btn ${oMode==="move"?"":"ghost"} sm" data-mode="move">Move men</button>
       <button class="btn ${oMode==="route"?"":"ghost"} sm" data-mode="route">Draw route</button>
+      <button class="btn ${oMode==="defense"?"":"ghost"} sm" data-mode="defense">Move OUR defense</button>
       <button class="btn ghost sm" data-clearroute ${oPicked<0?"disabled":""}>Clear his route</button>
     </div>
+    ${oMode==="defense" ? `<div class="rule" style="border-left-color:#8cc5e8">
+      <b>Your call, not mine</b>Drag any of our players and that becomes the right answer for
+      this play in the drills. ${Object.keys(p.defense||{}).length} moved so far.
+      <button class="btn ghost sm" id="oClearDef" style="margin-top:6px">Put them all back</button></div>` : ""}
     <div class="row" style="gap:6px;margin-bottom:6px">
       ${Object.keys(ROUTE_KINDS).map(k=>
         `<button class="btn ${oLegType===k?"":"ghost"} sm" data-rtype="${k}"
@@ -8570,6 +8813,8 @@ function renderOppDetail(){
 
   host.querySelectorAll("[data-mode]").forEach(b=>
     b.onclick = ()=>{ oMode = b.dataset.mode; renderOpponents(); });
+  const cd = document.getElementById("oClearDef");
+  if(cd) cd.onclick = ()=>{ p.defense = {}; renderOpponents(); };
   const cr = host.querySelector("[data-clearroute]");
   if(cr) cr.onclick = ()=>{ if(oPicked>=0 && p.routes){
     delete p.routes[oPicked];
@@ -8599,13 +8844,40 @@ function renderOppDetail(){
   document.getElementById("oDefChk").onchange  = e=>{ oShowDef = e.target.checked; renderOppField(); };
 }
 
+/* Where a defender actually belongs on this play — your override if you set
+   one, otherwise whatever the front and coverage rules produce. Overrides are
+   per front, because the Will's spot out of Tight isn't his spot out of Base. */
+const defKey = (front, pos, side) => `${front||"any"}|${pos}|${side||""}`;
+const TWO_OF_THEM = ["D. End", "D. Tackle", "Corner"];
+const SIDE_ALIAS = { strong:["strong","playside"], playside:["playside","strong"],
+                     weak:["weak","away"], away:["away","weak"], "":[""] };
+function defOverride(play, front, pos, side, ballX){
+  const d = play && play.defense;
+  if(!d) return null;
+  let v = null;
+  (SIDE_ALIAS[side||""] || [side||""]).forEach(x=>{ if(!v) v = d[defKey(front, pos, x)]; });
+  if(!v && !TWO_OF_THEM.includes(pos)){
+    const k = Object.keys(d).find(x=>{ const [f,p2] = x.split("|"); return f===front && p2===pos; });
+    if(k) v = d[k];
+  }
+  return v ? {x: clampX(ballX + v[0]), y: v[1]} : null;
+}
+function applyDefOverrides(list, play, front, ballX){
+  return list.map(p=>{
+    const o = defOverride(play, front, p.pos, p.side, ballX);
+    return o ? Object.assign({}, p, {x:o.x, y:o.y}) : p;
+  });
+}
+
 function renderOppField(){
   const p = currentPlay(), host = document.getElementById("oField");
   if(!p){ host.innerHTML = ""; document.getElementById("oHint").textContent = ""; return; }
 
   const off = playersToOffense(p.players, MID, p.name);
   const covKey = COV_KEY_BY_NAME[p.call.cov] || null;
-  const def = oShowDef ? defenseFor(p.call.front, p.call.line, covKey, off) : [];
+  const def = (oShowDef || oMode === "defense")
+    ? applyDefOverrides(defenseFor(p.call.front, p.call.line, covKey, off), p, p.call.front, off.ball)
+    : [];
 
   let extra = "";
   // routes already drawn, styled by what kind of assignment it is
@@ -8615,6 +8887,15 @@ function renderOppField(){
     const path = [[clampX(MID + pl.dx), pl.y], ...pts.map(q=>[clampX(MID + q[0]), q[1]])];
     extra += routePathSvg(path, legTypes(p, i, path.length-1), +i === oPicked);
   });
+  // our defenders get their own handles while you're moving them
+  if(oMode === "defense") def.forEach(d=>{
+    const moved = !!(p.defense && p.defense[defKey(p.call.front, d.pos, d.side)]);
+    extra += `<g class="ddot" data-dk="${defKey(p.call.front, d.pos, d.side)}">
+      <circle cx="${d.x}" cy="${d.y}" r="1.25" fill="rgba(140,197,232,.10)"
+        stroke="${moved?"#8cc5e8":"#5f7f96"}" stroke-width="${moved?".3":".12"}"
+        stroke-dasharray="${moved?"":".35 .35"}" style="cursor:grab"/></g>`;
+  });
+
   // grab handles — deliberately bigger than the token so they're easy to hit
   p.players.forEach((pl,i)=>{
     const x = clampX(MID + pl.dx), y = pl.y;                   // linemen included — you pull them
@@ -8661,6 +8942,25 @@ function wireOppDrag(wrap, play){
     kinds.push(oLegType);
     play.routeTypes[oPicked] = kinds;
     renderOppField();
+  });
+
+  wrap.querySelectorAll(".ddot").forEach(g=>{
+    const key = g.dataset.dk, circ = g.querySelector("circle");
+    let dragging = false;
+    g.addEventListener("pointerdown", e=>{
+      dragging = true; g.setPointerCapture(e.pointerId); e.preventDefault(); e.stopPropagation();
+    });
+    g.addEventListener("pointermove", e=>{
+      if(!dragging) return;
+      const q = toSvg(e);
+      const x = Math.max(.8, Math.min(FW-.8, q.x)), y = Math.max(LOS-2, Math.min(OPP_DEPTH-.8, q.y));
+      circ.setAttribute("cx",x); circ.setAttribute("cy",y);
+      play.defense = play.defense || {};
+      play.defense[key] = [round1(x - MID), round1(y)];
+    });
+    const stop = ()=>{ if(dragging){ dragging = false; renderOpponents(); } };
+    g.addEventListener("pointerup", stop);
+    g.addEventListener("pointercancel", stop);
   });
 
   wrap.querySelectorAll(".odot").forEach(g=>{
@@ -8871,6 +9171,17 @@ function rebuildRollLine(){
 bRF.onchange = rebuildRollLine;
 bRL.onchange = rebuildRollLine;
 bRL2.onchange = renderBuilder;
+const bFK = document.getElementById("bFake");
+function rebuildFakeSelect(){
+  const keep = bFK.value;
+  bFK.innerHTML = "";
+  bFK.add(new Option("— no fake —", "none"));
+  BLITZES.forEach(b=>{ if(b.key !== "none") bFK.add(new Option(b.name, b.key)); });
+  bFK.value = [...bFK.options].some(o=>o.value===keep) ? keep : "none";
+}
+bFK.onchange = e=>{ builderFake = e.target.value; renderBuilder(); };
+rebuildFakeSelect();
+
 document.getElementById("bRoll").onchange = e=>{
   builderRoll = e.target.checked;
   document.getElementById("bRollBox").style.display = builderRoll ? "" : "none";
@@ -8885,6 +9196,7 @@ function rebuildLineCallSelect(){
   bL.innerHTML = "";
   LINECALLS.forEach((l,i)=>{
     if(!legal.includes(l.key) && !l.custom) return;      // Monster only takes Flex and Y
+    if(l.requiresLine) return;                          // only lives in the "and" box
     bL.add(new Option(l.key==="none"?"No line call":l.name, i));
   });
   const back = [...bL.options].findIndex(o=>LINECALLS[+o.value].key===keep);
