@@ -6,7 +6,7 @@
 #
 # Signal names you can use:
 #   lion  tiger  eagle  rockroll  bracket  dion
-#   base43  tight44  tight53
+#   base43  tight44  tight53  cougar
 #   flex  cross  karate  g  text  twist  aloha
 #
 # tight53 is Monster. cross is the arms-crossed X — now only Axe uses it.
