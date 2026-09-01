@@ -113,6 +113,9 @@ label.f>span{display:block;font-size:12.5px;color:var(--muted);margin-bottom:5px
 @keyframes cutthroat{from{transform:translateX(7px)}to{transform:translateX(-7px)}}
 .mv-roll{transform-origin:50% 50%;animation:rollo .9s linear infinite}
 @keyframes rollo{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+/* Cougar — the limp wrist flopping down. Hinges at the wrist, hangs, comes back up. */
+.mv-flop{transform-origin:0% 0%;animation:flop 1.1s ease-in-out infinite}
+@keyframes flop{0%{transform:rotate(-6deg)}20%{transform:rotate(-6deg)}40%{transform:rotate(74deg)}55%{transform:rotate(66deg)}70%{transform:rotate(74deg)}100%{transform:rotate(-6deg)}}
 .mv-pump{animation:pump .45s ease-in-out infinite alternate}
 .mv-pump2{animation:pump .45s ease-in-out infinite alternate-reverse}
 @keyframes pump{from{transform:translateY(-4px)}to{transform:translateY(4px)}}
@@ -574,13 +577,26 @@ const FRONTS = [
     "Bandit":"Weak C gap, 5 yards. Split the gap if there's a slot.",
     "Corner":"7 yards off the ball, inside shade of the receiver.",
     "Safety":"10-12 yards, behind the Mike." },
-  personnel:"Sam walks up to the edge, the strong end slides to the guard and the strong tackle takes nose. Line reads S E T T E; Will, Mike and Bandit are behind it. Built this way so checking out to another front is easy." }
+  personnel:"Sam walks up to the edge, the strong end slides to the guard and the strong tackle takes nose. Line reads S E T T E; Will, Mike and Bandit are behind it. Built this way so checking out to another front is easy." },
+
+{ key:"cougar", name:"Cougar", textbook:"5-3 gap", sig:"cougar",
+  sigText:"Limp wrist — flat hand out, then let it flop down. The “oh, stop it” hand.",
+  notes:{
+    "D. End":"Strong end: D gap — a yard outside the last man on the line. Weak end: C gap, 5 tech (7 tech if there's a TE to your side).",
+    "D. Tackle":"B gap both sides, 3 tech. The A gaps are open on purpose — they're the Mike's.",
+    "Sam":"Walk up into the strong C gap. You're a down lineman in this front.",
+    "Mike":"Over the center, 3 yards back. Both A gaps are yours. Four wide, you're over the strong guard, level with the Will.",
+    "Will":"Stacked behind the Sam, 5 yards back — almost on top of the wing. Any back releasing out of the backfield to your side is yours. Four wide, you're over the weak guard.",
+    "Bandit":"Weak side, right on the End's outside foot, 5 yards back — level with the Will. Any back releasing out of the backfield to your side is yours. Four wide, you're out on the weak slot.",
+    "Corner":"7 off. Safety to your side, shade OUTSIDE your man. On your own out there, shade INSIDE. Press up at 2 only if they're stacked to your side. Nobody split out your way, you've got contain: outside the End, same depth as the Will.",
+    "Safety":"8 yards deep, inside shade of the corner — on the stack, or whichever side has more receivers. Never stand over an empty side. Four wide, you're out on the strong slot." },
+  personnel:"Five down: B, C and D gaps filled strong, B and C weak. Sam is the strong C-gap lineman, so the line reads E S T T E. Both A gaps are left open for the Mike, who sits 3 yards off the center. Against four wide we check into a gap-filled 5-2 — a lineman in every gap, Mike and Will level with each other over separate guards, Bandit and Safety out on the slots." }
 ];
 
 const LINECALLS = [
 { key:"none",  name:"—",     sig:null,      sigText:"", desc:"No line call.", who:"" },
 { key:"flex",  name:"Flex",  sig:"flex",    sigText:"Bicep flex.",
-  desc:"Don't go upfield — drop horizontal into the flat and play zone. Both D Ends, except in Monster where it's the weak End and the Sam.", who:"D. End" },
+  desc:"Don't go upfield — drop horizontal into the flat and play zone. Both D Ends, except in Monster and Cougar where it's the weak End and the Sam.", who:"D. End" },
 { key:"axe",   name:"Axe",   sig:"cross",   sigText:"Arms cross into an X.",
   desc:"BOTH D Tackles line up in the A gap. 2i tech.", who:"D. Tackle" },
 { key:"split", name:"Split", sig:"karate",  sigText:"Flat hand chops down at the stomach.",
@@ -590,7 +606,7 @@ const LINECALLS = [
 { key:"y",     name:"Y",     sig:"aloha",   sigText:"Two shakas touching thumbs.",
   desc:"D End lines up wide.", who:"D. End" },
 { key:"surf",  name:"Surf",  sig:"surf",    sigText:"Both palms pushing down.",
-  desc:"Don't go upfield. Shoulders square to the line, eyes on the quarterback, shuffle down the line to play both the QB and the handoff. Both ends unless one is called, and in Monster it's the weak End and the Sam.",
+  desc:"Don't go upfield. Shoulders square to the line, eyes on the quarterback, shuffle down the line to play both the QB and the handoff. Both ends unless one is called, and in Monster and Cougar it's the weak End and the Sam.",
   who:"D. End" },
 { key:"crash", name:"Crash", sig:"crash",   sigText:"Two palms crashing together.",
   desc:"Off Split — both D Tackles crash from their B gaps into the A gaps.",
@@ -690,6 +706,9 @@ const SIGNALS = {
   flex: () => svgWrap(`<g class="mv mv-flex"><path class="hi" d="M38 42 L22 34 L30 18"/><circle class="hand" cx="30" cy="17" r="4.5"/></g><g class="mv mv-flex"><path class="hi" d="M62 42 L78 34 L70 18"/><circle class="hand" cx="70" cy="17" r="4.5"/></g>`),
   /* Axe — arms held crossed in an X. Static, no motion. */
   cross: () => svgWrap(`<path class="hi" d="M38 42 L52 30 L66 16"/><circle class="hand" cx="67" cy="15" r="4"/><path class="hi" d="M62 42 L48 30 L34 16"/><circle class="hand" cx="33" cy="15" r="4"/>`),
+  /* Cougar — limp wrist. Flat hand held out, then it flops down at the wrist
+     and comes back up. The "oh, stop it" hand. */
+  cougar: () => svgWrap(`<path d="M38 42 L30 62 L34 78"/><path class="hi" d="M62 42 L70 33 L66 23"/><g class="mv mv-flop"><path class="hand" d="M66 21 L78 22 Q82 22.5 82 25 Q82 27.5 78 28 L66 27 Z"/><path class="hi" d="M81 22.5 L89 21.5 M81 24.5 L89 24 M81 26.5 L88 27" stroke-width="2"/></g>`),
   /* Split — flat hand chopping down at the stomach, not up by the shoulder. */
   karate: () => svgWrap(`<path d="M38 42 L30 62 L34 78"/><g class="mv mv-karate"><path class="hi" d="M62 42 L67 50 L58 57"/><rect class="hand" x="49" y="54" width="11" height="5" rx="1.6"/></g>`),
   g: () => svgWrap(`<path d="M38 42 L33 53 L45 49"/><circle class="hand" cx="46" cy="49" r="5.2"/><path d="M62 42 L67 53 L55 49"/><circle class="hand" cx="54" cy="49" r="5.2"/><path class="hi" d="M50 40 v-5 M42 42 l-4 -4 M58 42 l4 -4" stroke-width="2.2"/>`),
@@ -1235,6 +1254,57 @@ function dtX(off, side, front, lineKey){
                     : off.ball + side*TECH["2i"];   // weak: A gap, 2i
 }
 
+/* ---- Cougar landmarks ----
+   Five down linemen filling B, C and D strong and B and C weak. Both A gaps
+   are deliberately open — the Mike has them from 3 yards. The C gap is the
+   7 tech when there's a TE to that side and the 5 tech when there isn't. */
+function cgapX(off, side){ return off.ball + side*(hasTE(off, side) ? TECH["7"] : TECH["5"]); }
+
+/* Two detached receivers to the same side within 2.5 yards of each other.
+   Returns the side (+1/-1) or 0. Only a stack gets pressed. */
+function stackSide(off){
+  for(const side of [off.strength, -off.strength]){
+    const rs = receiversOnSide(off, side).filter(r=>!r.att);
+    for(let i=0; i<rs.length-1; i++)
+      if(Math.abs(rs[i].x - rs[i+1].x) <= 2.5) return side;
+  }
+  return 0;
+}
+/* Detached receivers to a side — an attached TE isn't the corner's problem. */
+function wideCount(off, side){ return receiversOnSide(off, side).filter(r=>!r.att).length; }
+
+/* Four wide — two detached receivers each side. That's the gap-filled 5-2 check. */
+function fourWide(off){ return wideCount(off, 1) >= 2 && wideCount(off, -1) >= 2; }
+
+/* Which side the free safety works to — the stack if there is one, otherwise
+   whichever side has more receivers. He never stands over an empty side. */
+function cougarSafetySide(off){
+  const r = wideCount(off, 1), l = wideCount(off, -1);
+  return stackSide(off) || (r === l ? off.strength : (r > l ? 1 : -1));
+}
+
+/* Where the Cougar corner sets up. He shades OUTSIDE his man when the safety
+   is to his side, and INSIDE when he's out there on his own. He only presses
+   when that side is stacked. With nobody detached out there he has no man at
+   all — he sets up outside the End at the Will's depth and plays contain. */
+function cougarCorner(off, side, lineKey){
+  /* Anybody split out wide is the corner's man, back or not — if they put a
+     runner on the numbers somebody has to go with him. Only the corner counts
+     backs this way; the Bandit and the Safety work off the receivers. */
+  const rs = off.players
+    .filter(p => ["wr","te","rb"].includes(p.t) && !p.att &&
+                 (p.x - off.ball)*side > 0 && Math.abs(p.x - off.ball) > OL_TE + 1)
+    .sort((a,b) => Math.abs(b.x-off.ball) - Math.abs(a.x-off.ball));
+  if(!rs.length){
+    const edge = side === off.strength ? deX(off, side, lineKey) : cgapX(off, side);
+    return {x: edge + side*1.5, y: LOS+5};                       // contain
+  }
+  const r = rs[0];                                               // widest man his side
+  const help = cougarSafetySide(off) === side;                   // safety over here?
+  if(stackSide(off) === side) return {x: r.x + side*0.5, y: LOS+2};   // pressed
+  return {x: r.x + (help ? side*1.0 : -side*1.0), y: LOS+7};
+}
+
 /* Outside backer landmark: split the gap if there's a slot, else off the end. */
 function obX(off, side, lineKey, offFromEnd){
   const sl = slotRecv(off, side);
@@ -1290,6 +1360,53 @@ function solveAlignment(front, lineKey, off, pos, side){
       case "Bandit":    return {x: cGap(off,w,lineKey), y: LOS+5};   // weak C
       case "Corner":  { const r=outermostRecv(off,S); return {x: r? r.x - S*1.2 : b+S*18, y: LOS+7}; }
       case "Safety":    return {x: b, y: LOS+11};
+    } break;
+
+  /* Cougar: five down men filling B, C and D strong and B and C weak. The Sam
+     walks up into the strong C gap, so the line reads E S T T E. Both A gaps
+     are left open — the Mike has them from 3 yards off the center. */
+  case "cougar":
+    /* Four wide: check into the gap-filled 5-2. A lineman in every gap —
+       nose over the ball with both A's, tackles in the B's, ends in the C's —
+       Mike and Will are the only backers, and the Bandit and the Safety go out
+       and take the slots. */
+    if(fourWide(off)){
+      const slot = sd => { const x = slotRecv(off, sd); return x ? x.x : off.ball + sd*9; };
+      switch(pos){
+        case "D. End":    return {x: b + S*TECH["5"], y: DL_Y};   // C gap both sides
+        case "D. Tackle": return S === s ? {x: b, y: DL_Y}        // strong tackle to nose, both A's
+                                         : {x: b + w*TECH["3"], y: DL_Y};    // weak B
+        case "Sam":       return {x: b + s*TECH["3"], y: DL_Y};   // strong B
+        /* Two backers, level with each other, one over each guard. */
+        case "Mike":      return {x: b + s*OL_G, y: LOS+5};
+        case "Will":      return {x: b + w*OL_G, y: LOS+5};
+        case "Bandit":    return {x: slot(w), y: LOS+5};          // weak slot
+        case "Safety":    return {x: slot(s), y: LOS+5};          // strong slot
+        case "Corner":    return cougarCorner(off, S, lineKey);
+      }
+      break;
+    }
+    switch(pos){
+      case "Sam":       return {x: cgapX(off, s), y: DL_Y};                   // strong C gap
+      /* Strong end has the D gap: outside the last man on the line, and never
+         inside two yards of the Sam. With no TE those are the same spot, so
+         without the floor the two of them stand on each other. */
+      case "D. End":  { if(S !== s) return {x: cgapX(off, w), y: DL_Y};       // weak C gap
+                        const wide = deX(off, s, lineKey), floor = cgapX(off, s) + s*2.0;
+                        return {x: Math.abs(wide-b) > Math.abs(floor-b) ? wide : floor, y: DL_Y}; }
+      case "D. Tackle": return {x: b + S*TECH["3"], y: DL_Y};                 // B gap both sides
+      case "Mike":      return {x: b, y: LOS+3};
+      case "Will":      return {x: cgapX(off, s), y: LOS+5};                  // stacked behind the Sam
+      case "Bandit":    return {x: cgapX(off, w) + w*1.0, y: LOS+5};          // outside the weak End's foot, level with the Will
+      case "Corner":    return cougarCorner(off, S, lineKey);
+      /* The safety goes where the receivers are — the stack if there is one,
+         otherwise whichever side has more of them. No sense standing over
+         nobody. Then 8 deep, inside shade of that corner. */
+      case "Safety":  { const hi = wideCount(off,1) === wideCount(off,-1)
+                                 ? s : (wideCount(off,1) > wideCount(off,-1) ? 1 : -1);
+                        const sd = stackSide(off) || hi;
+                        const c  = cougarCorner(off, sd, lineKey);
+                        return {x: c.x - sd*2.5, y: LOS+8}; }
     } break;
   }
   return null;
@@ -1434,16 +1551,19 @@ const TOL = { "D. End":1.2, "D. Tackle":1.0, "Mike":1.8, "Will":1.8, "Sam":2.0,
 /* which positions have a strong/weak split worth naming in the prompt */
 const TWO_SIDED = { base43:["D. End","D. Tackle","Corner"],
                     tight44:["D. End","D. Tackle","Corner"],
-                    monster:["D. End","D. Tackle","Corner"] };
+                    monster:["D. End","D. Tackle","Corner"],
+                    cougar:["D. End","D. Tackle","Corner"] };
 
 /* Line calls only apply to the 4-man fronts. */
 function legalLineCalls(front){
-  if(front === "monster") return ["none","flex","y"];
+  if(front === "monster" || front === "cougar") return ["none","flex","y"];
   return LINECALLS.map(l=>l.key);
 }
 
-/* Calls that never get made together. */
-const NEVER = { base43:["Tiger"], monster:["Lion","Dion","Eagle"], tight44:["Dion","Eagle"] };
+/* Calls that never get made together. Cougar and Monster both put the Sam on
+   the line, so any coverage that needs him in space is out. */
+const NEVER = { base43:["Tiger"], monster:["Lion","Dion","Eagle"],
+                cougar:["Lion","Dion","Eagle"], tight44:["Dion","Eagle"] };
 function callAllowed(frontKey, covName){ return !(NEVER[frontKey]||[]).includes(covName); }
 
 /* ============================================================
@@ -3845,7 +3965,7 @@ const DEFAULT_STUNTS = {
 const DEFAULT_OPPONENTS = {
   "archie": {
     "name": "Archie",
-    "useInQuizzes": true,
+    "useInQuizzes": false,
     "plays": [
       {
         "name": "Closed Run 1 (P)",
@@ -8462,8 +8582,8 @@ const DEFAULT_OPPONENTS = {
       }
     ]
   },
-  "jeffy": {
-    "name": "Jefferson",
+  "mt-eden": {
+    "name": "Mt. Eden",
     "useInQuizzes": false,
     "plays": [
       {
@@ -10675,7 +10795,7 @@ const DEFAULT_OPPONENTS = {
     ]
   },
   "mount-eden": {
-    "name": "Mt Eden",
+    "name": "Mount Eden",
     "useInQuizzes": false,
     "plays": [
       {
@@ -12361,6 +12481,2571 @@ const DEFAULT_OPPONENTS = {
         "coachNotes": ""
       }
     ]
+  },
+  "newark": {
+    "name": "Newark",
+    "useInQuizzes": true,
+    "plays": [
+      {
+        "name": "Base TE Strong",
+        "players": [
+          {
+            "lab": "C",
+            "t": "ol",
+            "att": false,
+            "dx": 0,
+            "y": 7
+          },
+          {
+            "lab": "G",
+            "t": "ol",
+            "att": false,
+            "dx": -2.4,
+            "y": 7
+          },
+          {
+            "lab": "G",
+            "t": "ol",
+            "att": false,
+            "dx": 2.4,
+            "y": 7
+          },
+          {
+            "lab": "T",
+            "t": "ol",
+            "att": false,
+            "dx": -4.8,
+            "y": 7
+          },
+          {
+            "lab": "T",
+            "t": "ol",
+            "att": false,
+            "dx": 4.8,
+            "y": 7
+          },
+          {
+            "lab": "WR",
+            "t": "wr",
+            "att": false,
+            "dx": 19.6,
+            "y": 4.9
+          },
+          {
+            "lab": "WR",
+            "t": "wr",
+            "att": false,
+            "dx": 18.5,
+            "y": 7
+          },
+          {
+            "lab": "QB",
+            "t": "qb",
+            "att": false,
+            "dx": 0.1,
+            "y": 3.1
+          },
+          {
+            "lab": "RB",
+            "t": "rb",
+            "att": false,
+            "dx": 0,
+            "y": 0.8
+          },
+          {
+            "lab": "TE",
+            "t": "te",
+            "att": true,
+            "dx": -7.3,
+            "y": 7.1
+          },
+          {
+            "lab": "RB",
+            "t": "rb",
+            "att": false,
+            "dx": -6.7,
+            "y": 5
+          }
+        ],
+        "routes": {},
+        "routeTypes": {},
+        "ball": null,
+        "handoff": null,
+        "quiz": false,
+        "defense": {},
+        "call": {
+          "front": "base43",
+          "cov": "Lion",
+          "line": "none"
+        },
+        "notes": "",
+        "coachNotes": ""
+      },
+      {
+        "name": "Base Strong",
+        "players": [
+          {
+            "lab": "C",
+            "t": "ol",
+            "att": false,
+            "dx": 0,
+            "y": 7
+          },
+          {
+            "lab": "G",
+            "t": "ol",
+            "att": false,
+            "dx": -2.4,
+            "y": 7
+          },
+          {
+            "lab": "G",
+            "t": "ol",
+            "att": false,
+            "dx": 2.4,
+            "y": 7
+          },
+          {
+            "lab": "T",
+            "t": "ol",
+            "att": false,
+            "dx": -4.8,
+            "y": 7
+          },
+          {
+            "lab": "T",
+            "t": "ol",
+            "att": false,
+            "dx": 4.8,
+            "y": 7
+          },
+          {
+            "lab": "WR",
+            "t": "wr",
+            "att": false,
+            "dx": 19.6,
+            "y": 4.9
+          },
+          {
+            "lab": "WR",
+            "t": "wr",
+            "att": false,
+            "dx": 18.5,
+            "y": 7
+          },
+          {
+            "lab": "QB",
+            "t": "qb",
+            "att": false,
+            "dx": 0.1,
+            "y": 3.1
+          },
+          {
+            "lab": "RB",
+            "t": "rb",
+            "att": false,
+            "dx": 0,
+            "y": 0.8
+          },
+          {
+            "lab": "TE",
+            "t": "te",
+            "att": true,
+            "dx": -7.3,
+            "y": 7.1
+          },
+          {
+            "lab": "RB",
+            "t": "rb",
+            "att": false,
+            "dx": -6.7,
+            "y": 5
+          }
+        ],
+        "routes": {},
+        "routeTypes": {},
+        "ball": null,
+        "handoff": null,
+        "quiz": false,
+        "defense": {
+          "base43|Safety|playside": [
+            15.8,
+            15.2
+          ],
+          "base43|Corner|away": [
+            18.5,
+            9.1
+          ],
+          "base43|Will|": [
+            -5.7,
+            12.8
+          ],
+          "base43|Mike|": [
+            -0.8,
+            10.7
+          ],
+          "base43|Sam|": [
+            -6.2,
+            8.9
+          ],
+          "base43|D. End|strong": [
+            -8.9,
+            9
+          ],
+          "base43|Corner|playside": [
+            -11.3,
+            14.1
+          ],
+          "base43|D. Tackle|strong": [
+            -3.6,
+            8.7
+          ],
+          "base43|Bandit|away": [
+            6.5,
+            13.3
+          ]
+        },
+        "call": {
+          "front": "base43",
+          "cov": "Lion",
+          "line": "none"
+        },
+        "notes": "",
+        "coachNotes": ""
+      },
+      {
+        "name": "Base Strong Screen",
+        "players": [
+          {
+            "lab": "C",
+            "t": "ol",
+            "att": false,
+            "dx": 0,
+            "y": 7
+          },
+          {
+            "lab": "G",
+            "t": "ol",
+            "att": false,
+            "dx": -2.4,
+            "y": 7
+          },
+          {
+            "lab": "G",
+            "t": "ol",
+            "att": false,
+            "dx": 2.4,
+            "y": 7
+          },
+          {
+            "lab": "T",
+            "t": "ol",
+            "att": false,
+            "dx": -4.8,
+            "y": 7
+          },
+          {
+            "lab": "T",
+            "t": "ol",
+            "att": false,
+            "dx": 4.8,
+            "y": 7
+          },
+          {
+            "lab": "WR",
+            "t": "wr",
+            "att": false,
+            "dx": 19.6,
+            "y": 4.9
+          },
+          {
+            "lab": "WR",
+            "t": "wr",
+            "att": false,
+            "dx": 18.5,
+            "y": 7
+          },
+          {
+            "lab": "QB",
+            "t": "qb",
+            "att": false,
+            "dx": 0.1,
+            "y": 3.1
+          },
+          {
+            "lab": "RB",
+            "t": "rb",
+            "att": false,
+            "dx": 0,
+            "y": 0.8
+          },
+          {
+            "lab": "TE",
+            "t": "te",
+            "att": true,
+            "dx": -7.3,
+            "y": 7.1
+          },
+          {
+            "lab": "RB",
+            "t": "rb",
+            "att": false,
+            "dx": -6.7,
+            "y": 5
+          }
+        ],
+        "routes": {
+          "0": [
+            [
+              1.1,
+              8.3
+            ]
+          ],
+          "1": [
+            [
+              -1.1,
+              8.4
+            ]
+          ],
+          "2": [
+            [
+              3.7,
+              8.7
+            ]
+          ],
+          "3": [
+            [
+              -4,
+              9
+            ]
+          ],
+          "4": [
+            [
+              6.4,
+              7.9
+            ],
+            [
+              11,
+              6.9
+            ],
+            [
+              13.2,
+              6.9
+            ],
+            [
+              13.1,
+              9.7
+            ]
+          ],
+          "5": [
+            [
+              21.7,
+              5.9
+            ],
+            [
+              17.5,
+              4.9
+            ]
+          ],
+          "8": [
+            [
+              6.3,
+              3.7
+            ]
+          ],
+          "9": [
+            [
+              -5.9,
+              8.8
+            ]
+          ],
+          "10": [
+            [
+              -8.9,
+              5.8
+            ]
+          ]
+        },
+        "routeTypes": {
+          "0": [
+            "block"
+          ],
+          "1": [
+            "block"
+          ],
+          "2": [
+            "block"
+          ],
+          "3": [
+            "block"
+          ],
+          "4": [
+            "block",
+            "route",
+            "route",
+            "block"
+          ],
+          "5": [
+            "route",
+            "route"
+          ],
+          "8": [
+            "block"
+          ],
+          "9": [
+            "block"
+          ],
+          "10": [
+            "block"
+          ]
+        },
+        "ball": null,
+        "handoff": null,
+        "quiz": false,
+        "defense": {},
+        "call": {
+          "front": "base43",
+          "cov": "Lion",
+          "line": "none"
+        },
+        "notes": "",
+        "coachNotes": ""
+      },
+      {
+        "name": "Base Strong Motion Run 1",
+        "players": [
+          {
+            "lab": "C",
+            "t": "ol",
+            "att": false,
+            "dx": 0,
+            "y": 7
+          },
+          {
+            "lab": "G",
+            "t": "ol",
+            "att": false,
+            "dx": -2.4,
+            "y": 7
+          },
+          {
+            "lab": "G",
+            "t": "ol",
+            "att": false,
+            "dx": 2.4,
+            "y": 7
+          },
+          {
+            "lab": "T",
+            "t": "ol",
+            "att": false,
+            "dx": -4.8,
+            "y": 7
+          },
+          {
+            "lab": "T",
+            "t": "ol",
+            "att": false,
+            "dx": 4.8,
+            "y": 7
+          },
+          {
+            "lab": "WR",
+            "t": "wr",
+            "att": false,
+            "dx": 19.6,
+            "y": 4.9
+          },
+          {
+            "lab": "WR",
+            "t": "wr",
+            "att": false,
+            "dx": 18.5,
+            "y": 7
+          },
+          {
+            "lab": "QB",
+            "t": "qb",
+            "att": false,
+            "dx": 0.1,
+            "y": 3.1
+          },
+          {
+            "lab": "RB",
+            "t": "rb",
+            "att": false,
+            "dx": 0,
+            "y": 0.8
+          },
+          {
+            "lab": "TE",
+            "t": "te",
+            "att": true,
+            "dx": -7.3,
+            "y": 7.1
+          },
+          {
+            "lab": "RB",
+            "t": "rb",
+            "att": false,
+            "dx": -6.7,
+            "y": 5
+          }
+        ],
+        "routes": {
+          "8": [
+            [
+              1.2,
+              12.4
+            ]
+          ],
+          "10": [
+            [
+              0.9,
+              4.6
+            ],
+            [
+              14.3,
+              5
+            ]
+          ]
+        },
+        "routeTypes": {
+          "8": [
+            "run"
+          ],
+          "10": [
+            "motion",
+            "route"
+          ]
+        },
+        "ball": null,
+        "handoff": null,
+        "quiz": false,
+        "defense": {},
+        "call": {
+          "front": "base43",
+          "cov": "Lion",
+          "line": "none"
+        },
+        "notes": "",
+        "coachNotes": ""
+      },
+      {
+        "name": "Base Strong Run 1",
+        "players": [
+          {
+            "lab": "C",
+            "t": "ol",
+            "att": false,
+            "dx": 0,
+            "y": 7
+          },
+          {
+            "lab": "G",
+            "t": "ol",
+            "att": false,
+            "dx": -2.4,
+            "y": 7
+          },
+          {
+            "lab": "G",
+            "t": "ol",
+            "att": false,
+            "dx": 2.4,
+            "y": 7
+          },
+          {
+            "lab": "T",
+            "t": "ol",
+            "att": false,
+            "dx": -4.8,
+            "y": 7
+          },
+          {
+            "lab": "T",
+            "t": "ol",
+            "att": false,
+            "dx": 4.8,
+            "y": 7
+          },
+          {
+            "lab": "WR",
+            "t": "wr",
+            "att": false,
+            "dx": 19.3,
+            "y": 4.7
+          },
+          {
+            "lab": "WR",
+            "t": "wr",
+            "att": false,
+            "dx": 18.5,
+            "y": 7
+          },
+          {
+            "lab": "QB",
+            "t": "qb",
+            "att": false,
+            "dx": 0.1,
+            "y": 3.1
+          },
+          {
+            "lab": "RB",
+            "t": "rb",
+            "att": false,
+            "dx": 0,
+            "y": 0.8
+          },
+          {
+            "lab": "TE",
+            "t": "te",
+            "att": true,
+            "dx": -7.3,
+            "y": 7.1
+          },
+          {
+            "lab": "RB",
+            "t": "rb",
+            "att": false,
+            "dx": -6.7,
+            "y": 5
+          }
+        ],
+        "routes": {
+          "0": [
+            [
+              -1.1,
+              5.3
+            ],
+            [
+              -8.5,
+              5.8
+            ],
+            [
+              -8.4,
+              8.7
+            ]
+          ],
+          "1": [
+            [
+              -2.4,
+              8.6
+            ]
+          ],
+          "2": [
+            [
+              0.8,
+              8.8
+            ]
+          ],
+          "3": [
+            [
+              -4.5,
+              8.8
+            ]
+          ],
+          "4": [
+            [
+              6.3,
+              7.6
+            ]
+          ],
+          "5": [
+            [
+              19.7,
+              5.2
+            ],
+            [
+              16.1,
+              4.5
+            ]
+          ],
+          "6": [
+            [
+              18.7,
+              12.9
+            ]
+          ],
+          "8": [
+            [
+              -5.6,
+              9.4
+            ]
+          ],
+          "9": [
+            [
+              -6.8,
+              8.5
+            ]
+          ],
+          "10": [
+            [
+              -11.4,
+              7.8
+            ]
+          ]
+        },
+        "routeTypes": {
+          "0": [
+            "block",
+            "block",
+            "block"
+          ],
+          "1": [
+            "block"
+          ],
+          "2": [
+            "block"
+          ],
+          "3": [
+            "block"
+          ],
+          "4": [
+            "block"
+          ],
+          "5": [
+            "route",
+            "route"
+          ],
+          "6": [
+            "block"
+          ],
+          "8": [
+            "run"
+          ],
+          "9": [
+            "block"
+          ],
+          "10": [
+            "block"
+          ]
+        },
+        "ball": null,
+        "handoff": null,
+        "quiz": false,
+        "defense": {},
+        "call": {
+          "front": "base43",
+          "cov": "Lion",
+          "line": "none"
+        },
+        "notes": "",
+        "coachNotes": ""
+      },
+      {
+        "name": "Base Weak",
+        "players": [
+          {
+            "lab": "C",
+            "t": "ol",
+            "att": false,
+            "dx": 0,
+            "y": 7
+          },
+          {
+            "lab": "G",
+            "t": "ol",
+            "att": false,
+            "dx": -2.4,
+            "y": 7
+          },
+          {
+            "lab": "G",
+            "t": "ol",
+            "att": false,
+            "dx": 2.4,
+            "y": 7
+          },
+          {
+            "lab": "T",
+            "t": "ol",
+            "att": false,
+            "dx": -4.8,
+            "y": 7
+          },
+          {
+            "lab": "T",
+            "t": "ol",
+            "att": false,
+            "dx": 4.8,
+            "y": 7
+          },
+          {
+            "lab": "WR",
+            "t": "wr",
+            "att": false,
+            "dx": 19.1,
+            "y": 5.1
+          },
+          {
+            "lab": "WR",
+            "t": "wr",
+            "att": false,
+            "dx": 18.5,
+            "y": 7
+          },
+          {
+            "lab": "QB",
+            "t": "qb",
+            "att": false,
+            "dx": 0.1,
+            "y": 3.1
+          },
+          {
+            "lab": "RB",
+            "t": "rb",
+            "att": false,
+            "dx": 0,
+            "y": 0.8
+          },
+          {
+            "lab": "TE",
+            "t": "te",
+            "att": true,
+            "dx": -7.3,
+            "y": 7.1
+          },
+          {
+            "lab": "RB",
+            "t": "rb",
+            "att": false,
+            "dx": 5,
+            "y": 4.8
+          }
+        ],
+        "routes": {},
+        "routeTypes": {},
+        "ball": null,
+        "handoff": null,
+        "quiz": false,
+        "defense": {},
+        "call": {
+          "front": "base43",
+          "cov": "Lion",
+          "line": "none"
+        },
+        "notes": "",
+        "coachNotes": ""
+      },
+      {
+        "name": "Base Weak Screen Motion",
+        "players": [
+          {
+            "lab": "C",
+            "t": "ol",
+            "att": false,
+            "dx": 0,
+            "y": 7
+          },
+          {
+            "lab": "G",
+            "t": "ol",
+            "att": false,
+            "dx": -2.4,
+            "y": 7
+          },
+          {
+            "lab": "G",
+            "t": "ol",
+            "att": false,
+            "dx": 2.4,
+            "y": 7
+          },
+          {
+            "lab": "T",
+            "t": "ol",
+            "att": false,
+            "dx": -4.8,
+            "y": 7
+          },
+          {
+            "lab": "T",
+            "t": "ol",
+            "att": false,
+            "dx": 4.8,
+            "y": 7
+          },
+          {
+            "lab": "WR",
+            "t": "wr",
+            "att": false,
+            "dx": 19.1,
+            "y": 5.1
+          },
+          {
+            "lab": "WR",
+            "t": "wr",
+            "att": false,
+            "dx": 18.5,
+            "y": 7
+          },
+          {
+            "lab": "QB",
+            "t": "qb",
+            "att": false,
+            "dx": 0.1,
+            "y": 3.1
+          },
+          {
+            "lab": "RB",
+            "t": "rb",
+            "att": false,
+            "dx": 0,
+            "y": 0.8
+          },
+          {
+            "lab": "TE",
+            "t": "te",
+            "att": true,
+            "dx": -7.3,
+            "y": 7.1
+          },
+          {
+            "lab": "RB",
+            "t": "rb",
+            "att": false,
+            "dx": 5,
+            "y": 4.8
+          }
+        ],
+        "routes": {
+          "4": [
+            [
+              9.4,
+              6.9
+            ],
+            [
+              10.8,
+              7.4
+            ],
+            [
+              12.3,
+              8.6
+            ],
+            [
+              12.8,
+              9.4
+            ]
+          ],
+          "5": [
+            [
+              21.3,
+              5.4
+            ],
+            [
+              17.1,
+              5.1
+            ]
+          ],
+          "6": [
+            [
+              18.4,
+              15.8
+            ]
+          ],
+          "10": [
+            [
+              7.4,
+              5.6
+            ],
+            [
+              8.1,
+              8.9
+            ],
+            [
+              7.9,
+              9.9
+            ],
+            [
+              8.3,
+              10.5
+            ],
+            [
+              9.2,
+              10.8
+            ],
+            [
+              10.8,
+              11.1
+            ],
+            [
+              13,
+              11.1
+            ],
+            [
+              15.2,
+              10.8
+            ],
+            [
+              16,
+              10.7
+            ],
+            [
+              17.3,
+              10.7
+            ]
+          ]
+        },
+        "routeTypes": {
+          "4": [
+            "block",
+            "block",
+            "block",
+            "block"
+          ],
+          "5": [
+            "route",
+            "route"
+          ],
+          "6": [
+            "route"
+          ],
+          "10": [
+            "motion",
+            "route",
+            "route",
+            "route",
+            "route",
+            "route",
+            "route",
+            "route",
+            "route",
+            "route"
+          ]
+        },
+        "ball": null,
+        "handoff": null,
+        "quiz": false,
+        "defense": {
+          "tight44|Bandit|away": [
+            7.8,
+            12.2
+          ],
+          "tight44|Sam|": [
+            17.1,
+            16.6
+          ],
+          "tight44|Corner|away": [
+            18.8,
+            9.5
+          ]
+        },
+        "call": {
+          "front": "tight44",
+          "cov": "Lion",
+          "line": "none"
+        },
+        "notes": "",
+        "coachNotes": ""
+      },
+      {
+        "name": "Base Motion Pass",
+        "players": [
+          {
+            "lab": "C",
+            "t": "ol",
+            "att": false,
+            "dx": 0,
+            "y": 7
+          },
+          {
+            "lab": "G",
+            "t": "ol",
+            "att": false,
+            "dx": -2.4,
+            "y": 7
+          },
+          {
+            "lab": "G",
+            "t": "ol",
+            "att": false,
+            "dx": 2.4,
+            "y": 7
+          },
+          {
+            "lab": "T",
+            "t": "ol",
+            "att": false,
+            "dx": -4.8,
+            "y": 7
+          },
+          {
+            "lab": "T",
+            "t": "ol",
+            "att": false,
+            "dx": 4.8,
+            "y": 7
+          },
+          {
+            "lab": "WR",
+            "t": "wr",
+            "att": false,
+            "dx": 19.1,
+            "y": 5.1
+          },
+          {
+            "lab": "WR",
+            "t": "wr",
+            "att": false,
+            "dx": 18.5,
+            "y": 7
+          },
+          {
+            "lab": "QB",
+            "t": "qb",
+            "att": false,
+            "dx": 0.1,
+            "y": 3.1
+          },
+          {
+            "lab": "RB",
+            "t": "rb",
+            "att": false,
+            "dx": 0,
+            "y": 0.8
+          },
+          {
+            "lab": "TE",
+            "t": "te",
+            "att": true,
+            "dx": -7.3,
+            "y": 7.1
+          },
+          {
+            "lab": "RB",
+            "t": "rb",
+            "att": false,
+            "dx": -6.3,
+            "y": 4.9
+          }
+        ],
+        "routes": {
+          "5": [
+            [
+              19.2,
+              20
+            ]
+          ],
+          "6": [
+            [
+              17.6,
+              13.3
+            ],
+            [
+              8.2,
+              20.6
+            ]
+          ],
+          "9": [
+            [
+              -5.8,
+              17.2
+            ]
+          ],
+          "10": [
+            [
+              4.4,
+              4.8
+            ],
+            [
+              7.5,
+              6.1
+            ],
+            [
+              10.2,
+              6.1
+            ],
+            [
+              12.4,
+              6.1
+            ],
+            [
+              13.6,
+              6.2
+            ]
+          ]
+        },
+        "routeTypes": {
+          "5": [
+            "route"
+          ],
+          "6": [
+            "route",
+            "route"
+          ],
+          "9": [
+            "route"
+          ],
+          "10": [
+            "motion",
+            "route",
+            "route",
+            "route",
+            "route"
+          ]
+        },
+        "ball": null,
+        "handoff": null,
+        "quiz": false,
+        "defense": {},
+        "call": {
+          "front": "base43",
+          "cov": "Lion",
+          "line": "none"
+        },
+        "notes": "",
+        "coachNotes": ""
+      },
+      {
+        "name": "Base Weak Motion Run",
+        "players": [
+          {
+            "lab": "C",
+            "t": "ol",
+            "att": false,
+            "dx": 0,
+            "y": 7
+          },
+          {
+            "lab": "G",
+            "t": "ol",
+            "att": false,
+            "dx": -2.4,
+            "y": 7
+          },
+          {
+            "lab": "G",
+            "t": "ol",
+            "att": false,
+            "dx": 2.4,
+            "y": 7
+          },
+          {
+            "lab": "T",
+            "t": "ol",
+            "att": false,
+            "dx": -4.8,
+            "y": 7
+          },
+          {
+            "lab": "T",
+            "t": "ol",
+            "att": false,
+            "dx": 4.8,
+            "y": 7
+          },
+          {
+            "lab": "WR",
+            "t": "wr",
+            "att": false,
+            "dx": 19.1,
+            "y": 5.1
+          },
+          {
+            "lab": "WR",
+            "t": "wr",
+            "att": false,
+            "dx": 18.5,
+            "y": 7
+          },
+          {
+            "lab": "QB",
+            "t": "qb",
+            "att": false,
+            "dx": 0.1,
+            "y": 3.1
+          },
+          {
+            "lab": "RB",
+            "t": "rb",
+            "att": false,
+            "dx": 0,
+            "y": 0.8
+          },
+          {
+            "lab": "TE",
+            "t": "te",
+            "att": true,
+            "dx": -7.3,
+            "y": 7.1
+          },
+          {
+            "lab": "RB",
+            "t": "rb",
+            "att": false,
+            "dx": 5,
+            "y": 4.8
+          }
+        ],
+        "routes": {
+          "0": [
+            [
+              -1.5,
+              5.4
+            ],
+            [
+              -5.7,
+              5.4
+            ],
+            [
+              -9.1,
+              6
+            ],
+            [
+              -9.7,
+              7.6
+            ]
+          ],
+          "1": [
+            [
+              -0.3,
+              8.2
+            ]
+          ],
+          "2": [
+            [
+              2.3,
+              8.5
+            ]
+          ],
+          "3": [
+            [
+              -4.3,
+              8.4
+            ]
+          ],
+          "4": [
+            [
+              5.8,
+              8.2
+            ]
+          ],
+          "5": [
+            [
+              21.5,
+              6
+            ],
+            [
+              17.4,
+              5.3
+            ]
+          ],
+          "6": [
+            [
+              18.3,
+              15
+            ]
+          ],
+          "8": [
+            [
+              -8.5,
+              8.6
+            ]
+          ],
+          "9": [
+            [
+              -6.6,
+              8.8
+            ]
+          ],
+          "10": [
+            [
+              -3.5,
+              4.7
+            ],
+            [
+              -13,
+              7.9
+            ]
+          ]
+        },
+        "routeTypes": {
+          "0": [
+            "block",
+            "block",
+            "block",
+            "block"
+          ],
+          "1": [
+            "block"
+          ],
+          "2": [
+            "block"
+          ],
+          "3": [
+            "block"
+          ],
+          "4": [
+            "block"
+          ],
+          "5": [
+            "route",
+            "route"
+          ],
+          "6": [
+            "block"
+          ],
+          "8": [
+            "run"
+          ],
+          "9": [
+            "block"
+          ],
+          "10": [
+            "motion",
+            "block"
+          ]
+        },
+        "ball": null,
+        "handoff": null,
+        "quiz": false,
+        "defense": {},
+        "call": {
+          "front": "base43",
+          "cov": "Lion",
+          "line": "none"
+        },
+        "notes": "",
+        "coachNotes": ""
+      },
+      {
+        "name": "Base Reciever",
+        "players": [
+          {
+            "lab": "C",
+            "t": "ol",
+            "att": false,
+            "dx": 0,
+            "y": 7
+          },
+          {
+            "lab": "G",
+            "t": "ol",
+            "att": false,
+            "dx": -2.4,
+            "y": 7
+          },
+          {
+            "lab": "G",
+            "t": "ol",
+            "att": false,
+            "dx": 2.4,
+            "y": 7
+          },
+          {
+            "lab": "T",
+            "t": "ol",
+            "att": false,
+            "dx": -4.8,
+            "y": 7
+          },
+          {
+            "lab": "T",
+            "t": "ol",
+            "att": false,
+            "dx": 4.8,
+            "y": 7
+          },
+          {
+            "lab": "WR",
+            "t": "wr",
+            "att": false,
+            "dx": 21.5,
+            "y": 5.9
+          },
+          {
+            "lab": "WR",
+            "t": "wr",
+            "att": false,
+            "dx": 18.3,
+            "y": 6.1
+          },
+          {
+            "lab": "QB",
+            "t": "qb",
+            "att": false,
+            "dx": 0.1,
+            "y": 3.1
+          },
+          {
+            "lab": "RB",
+            "t": "rb",
+            "att": false,
+            "dx": 0,
+            "y": 0.8
+          },
+          {
+            "lab": "TE",
+            "t": "te",
+            "att": true,
+            "dx": 7.2,
+            "y": 7.1
+          },
+          {
+            "lab": "RB",
+            "t": "rb",
+            "att": false,
+            "dx": -20.5,
+            "y": 7
+          }
+        ],
+        "routes": {},
+        "routeTypes": {},
+        "ball": null,
+        "handoff": null,
+        "quiz": false,
+        "defense": {},
+        "call": {
+          "front": "base43",
+          "cov": "Lion",
+          "line": "none"
+        },
+        "notes": "",
+        "coachNotes": ""
+      },
+      {
+        "name": "Base Reciever Run",
+        "players": [
+          {
+            "lab": "C",
+            "t": "ol",
+            "att": false,
+            "dx": 0,
+            "y": 7
+          },
+          {
+            "lab": "G",
+            "t": "ol",
+            "att": false,
+            "dx": -2.4,
+            "y": 7
+          },
+          {
+            "lab": "G",
+            "t": "ol",
+            "att": false,
+            "dx": 2.4,
+            "y": 7
+          },
+          {
+            "lab": "T",
+            "t": "ol",
+            "att": false,
+            "dx": -4.8,
+            "y": 7
+          },
+          {
+            "lab": "T",
+            "t": "ol",
+            "att": false,
+            "dx": 4.8,
+            "y": 7
+          },
+          {
+            "lab": "WR",
+            "t": "wr",
+            "att": false,
+            "dx": 21.5,
+            "y": 5.9
+          },
+          {
+            "lab": "WR",
+            "t": "wr",
+            "att": false,
+            "dx": 18.3,
+            "y": 6.1
+          },
+          {
+            "lab": "QB",
+            "t": "qb",
+            "att": false,
+            "dx": 0.1,
+            "y": 3.1
+          },
+          {
+            "lab": "RB",
+            "t": "rb",
+            "att": false,
+            "dx": 0,
+            "y": 0.8
+          },
+          {
+            "lab": "TE",
+            "t": "te",
+            "att": true,
+            "dx": 7.2,
+            "y": 7.1
+          },
+          {
+            "lab": "RB",
+            "t": "rb",
+            "att": false,
+            "dx": -20.5,
+            "y": 7
+          }
+        ],
+        "routes": {
+          "2": [
+            [
+              5.6,
+              5.4
+            ],
+            [
+              8.8,
+              6.8
+            ],
+            [
+              9.4,
+              8.3
+            ]
+          ],
+          "4": [
+            [
+              2.9,
+              8.6
+            ]
+          ],
+          "8": [
+            [
+              6.8,
+              10.5
+            ]
+          ],
+          "9": [
+            [
+              7.5,
+              8.5
+            ]
+          ]
+        },
+        "routeTypes": {
+          "2": [
+            "block",
+            "block",
+            "block"
+          ],
+          "4": [
+            "block"
+          ],
+          "8": [
+            "run"
+          ],
+          "9": [
+            "block"
+          ]
+        },
+        "ball": null,
+        "handoff": null,
+        "quiz": false,
+        "defense": {},
+        "call": {
+          "front": "base43",
+          "cov": "Lion",
+          "line": "none"
+        },
+        "notes": "",
+        "coachNotes": ""
+      },
+      {
+        "name": "Base Weak Run 1",
+        "players": [
+          {
+            "lab": "C",
+            "t": "ol",
+            "att": false,
+            "dx": 0,
+            "y": 7
+          },
+          {
+            "lab": "G",
+            "t": "ol",
+            "att": false,
+            "dx": -2.4,
+            "y": 7
+          },
+          {
+            "lab": "G",
+            "t": "ol",
+            "att": false,
+            "dx": 2.4,
+            "y": 7
+          },
+          {
+            "lab": "T",
+            "t": "ol",
+            "att": false,
+            "dx": -4.8,
+            "y": 7
+          },
+          {
+            "lab": "T",
+            "t": "ol",
+            "att": false,
+            "dx": 4.8,
+            "y": 7
+          },
+          {
+            "lab": "WR",
+            "t": "wr",
+            "att": false,
+            "dx": 19.5,
+            "y": 4.9
+          },
+          {
+            "lab": "WR",
+            "t": "wr",
+            "att": false,
+            "dx": 18.5,
+            "y": 7
+          },
+          {
+            "lab": "QB",
+            "t": "qb",
+            "att": false,
+            "dx": 0.1,
+            "y": 3.1
+          },
+          {
+            "lab": "RB",
+            "t": "rb",
+            "att": false,
+            "dx": 0,
+            "y": 0.8
+          },
+          {
+            "lab": "TE",
+            "t": "te",
+            "att": true,
+            "dx": -7.3,
+            "y": 7.1
+          },
+          {
+            "lab": "RB",
+            "t": "rb",
+            "att": false,
+            "dx": 4.9,
+            "y": 4.7
+          }
+        ],
+        "routes": {
+          "0": [
+            [
+              -1.2,
+              8.4
+            ]
+          ],
+          "1": [
+            [
+              -3.7,
+              8.4
+            ]
+          ],
+          "2": [
+            [
+              5.2,
+              8.3
+            ]
+          ],
+          "3": [
+            [
+              -6,
+              8.3
+            ]
+          ],
+          "4": [
+            [
+              2.6,
+              8.9
+            ]
+          ],
+          "6": [
+            [
+              16,
+              12.3
+            ]
+          ],
+          "8": [
+            [
+              3.6,
+              9.7
+            ]
+          ],
+          "9": [
+            [
+              -9,
+              7.9
+            ]
+          ],
+          "10": [
+            [
+              4.3,
+              8.3
+            ]
+          ]
+        },
+        "routeTypes": {
+          "0": [
+            "block"
+          ],
+          "1": [
+            "block"
+          ],
+          "2": [
+            "block"
+          ],
+          "3": [
+            "block"
+          ],
+          "4": [
+            "block"
+          ],
+          "6": [
+            "block"
+          ],
+          "8": [
+            "run"
+          ],
+          "9": [
+            "block"
+          ],
+          "10": [
+            "block"
+          ]
+        },
+        "ball": null,
+        "handoff": null,
+        "quiz": false,
+        "defense": {},
+        "call": {
+          "front": "base43",
+          "cov": "Lion",
+          "line": "none"
+        },
+        "notes": "",
+        "coachNotes": ""
+      },
+      {
+        "name": "Base Reievers",
+        "players": [
+          {
+            "lab": "C",
+            "t": "ol",
+            "att": false,
+            "dx": 0,
+            "y": 7
+          },
+          {
+            "lab": "G",
+            "t": "ol",
+            "att": false,
+            "dx": -2.4,
+            "y": 7
+          },
+          {
+            "lab": "G",
+            "t": "ol",
+            "att": false,
+            "dx": 2.4,
+            "y": 7
+          },
+          {
+            "lab": "T",
+            "t": "ol",
+            "att": false,
+            "dx": -4.8,
+            "y": 7
+          },
+          {
+            "lab": "T",
+            "t": "ol",
+            "att": false,
+            "dx": 4.8,
+            "y": 7
+          },
+          {
+            "lab": "WR",
+            "t": "wr",
+            "att": false,
+            "dx": 19.1,
+            "y": 5.1
+          },
+          {
+            "lab": "WR",
+            "t": "wr",
+            "att": false,
+            "dx": 18.5,
+            "y": 7
+          },
+          {
+            "lab": "QB",
+            "t": "qb",
+            "att": false,
+            "dx": 0.1,
+            "y": 3.1
+          },
+          {
+            "lab": "RB",
+            "t": "rb",
+            "att": false,
+            "dx": 0,
+            "y": 0.8
+          },
+          {
+            "lab": "TE",
+            "t": "te",
+            "att": true,
+            "dx": -7.3,
+            "y": 7.1
+          },
+          {
+            "lab": "RB",
+            "t": "rb",
+            "att": false,
+            "dx": -22,
+            "y": 6.2
+          }
+        ],
+        "routes": {},
+        "routeTypes": {},
+        "ball": null,
+        "handoff": null,
+        "quiz": false,
+        "defense": {},
+        "call": {
+          "front": "base43",
+          "cov": "Lion",
+          "line": "none"
+        },
+        "notes": "",
+        "coachNotes": ""
+      },
+      {
+        "name": "Spread",
+        "players": [
+          {
+            "lab": "C",
+            "t": "ol",
+            "att": false,
+            "dx": 0,
+            "y": 7
+          },
+          {
+            "lab": "G",
+            "t": "ol",
+            "att": false,
+            "dx": -2.4,
+            "y": 7
+          },
+          {
+            "lab": "G",
+            "t": "ol",
+            "att": false,
+            "dx": 2.4,
+            "y": 7
+          },
+          {
+            "lab": "T",
+            "t": "ol",
+            "att": false,
+            "dx": -4.8,
+            "y": 7
+          },
+          {
+            "lab": "T",
+            "t": "ol",
+            "att": false,
+            "dx": 4.8,
+            "y": 7
+          },
+          {
+            "lab": "WR",
+            "t": "wr",
+            "att": false,
+            "dx": -18,
+            "y": 7
+          },
+          {
+            "lab": "WR",
+            "t": "wr",
+            "att": false,
+            "dx": -10.9,
+            "y": 5.6
+          },
+          {
+            "lab": "WR",
+            "t": "wr",
+            "att": false,
+            "dx": 18.8,
+            "y": 5
+          },
+          {
+            "lab": "WR",
+            "t": "wr",
+            "att": false,
+            "dx": 18,
+            "y": 7
+          },
+          {
+            "lab": "QB",
+            "t": "qb",
+            "att": false,
+            "dx": -0.1,
+            "y": 3.5
+          },
+          {
+            "lab": "RB",
+            "t": "rb",
+            "att": false,
+            "dx": -0.2,
+            "y": 0.8
+          }
+        ],
+        "routes": {},
+        "routeTypes": {},
+        "ball": null,
+        "handoff": null,
+        "quiz": false,
+        "defense": {},
+        "call": {
+          "front": "base43",
+          "cov": "Lion",
+          "line": "none"
+        },
+        "notes": "",
+        "coachNotes": ""
+      },
+      {
+        "name": "Spread Pass 2",
+        "players": [
+          {
+            "lab": "C",
+            "t": "ol",
+            "att": false,
+            "dx": 0,
+            "y": 7
+          },
+          {
+            "lab": "G",
+            "t": "ol",
+            "att": false,
+            "dx": -2.4,
+            "y": 7
+          },
+          {
+            "lab": "G",
+            "t": "ol",
+            "att": false,
+            "dx": 2.4,
+            "y": 7
+          },
+          {
+            "lab": "T",
+            "t": "ol",
+            "att": false,
+            "dx": -4.8,
+            "y": 7
+          },
+          {
+            "lab": "T",
+            "t": "ol",
+            "att": false,
+            "dx": 4.8,
+            "y": 7
+          },
+          {
+            "lab": "WR",
+            "t": "wr",
+            "att": false,
+            "dx": -18,
+            "y": 7
+          },
+          {
+            "lab": "WR",
+            "t": "wr",
+            "att": false,
+            "dx": -10.9,
+            "y": 5.6
+          },
+          {
+            "lab": "WR",
+            "t": "wr",
+            "att": false,
+            "dx": 9.4,
+            "y": 5.4
+          },
+          {
+            "lab": "WR",
+            "t": "wr",
+            "att": false,
+            "dx": 19.8,
+            "y": 6.7
+          },
+          {
+            "lab": "QB",
+            "t": "qb",
+            "att": false,
+            "dx": -0.1,
+            "y": 3.5
+          },
+          {
+            "lab": "RB",
+            "t": "rb",
+            "att": false,
+            "dx": -0.2,
+            "y": 0.8
+          }
+        ],
+        "routes": {
+          "5": [
+            [
+              -19,
+              21.4
+            ]
+          ],
+          "6": [
+            [
+              -10.7,
+              12.3
+            ],
+            [
+              -9.7,
+              11.2
+            ]
+          ],
+          "7": [
+            [
+              9.5,
+              13.4
+            ],
+            [
+              10.1,
+              11.4
+            ]
+          ],
+          "8": [
+            [
+              19.4,
+              21.5
+            ]
+          ]
+        },
+        "routeTypes": {
+          "5": [
+            "route"
+          ],
+          "6": [
+            "route",
+            "route"
+          ],
+          "7": [
+            "route",
+            "route"
+          ],
+          "8": [
+            "route"
+          ]
+        },
+        "ball": null,
+        "handoff": null,
+        "quiz": false,
+        "defense": {},
+        "call": {
+          "front": "base43",
+          "cov": "Lion",
+          "line": "none"
+        },
+        "notes": "",
+        "coachNotes": ""
+      },
+      {
+        "name": "Spread Pass 3",
+        "players": [
+          {
+            "lab": "C",
+            "t": "ol",
+            "att": false,
+            "dx": 0,
+            "y": 7
+          },
+          {
+            "lab": "G",
+            "t": "ol",
+            "att": false,
+            "dx": -2.4,
+            "y": 7
+          },
+          {
+            "lab": "G",
+            "t": "ol",
+            "att": false,
+            "dx": 2.4,
+            "y": 7
+          },
+          {
+            "lab": "T",
+            "t": "ol",
+            "att": false,
+            "dx": -4.8,
+            "y": 7
+          },
+          {
+            "lab": "T",
+            "t": "ol",
+            "att": false,
+            "dx": 4.8,
+            "y": 7
+          },
+          {
+            "lab": "WR",
+            "t": "wr",
+            "att": false,
+            "dx": -18,
+            "y": 7
+          },
+          {
+            "lab": "WR",
+            "t": "wr",
+            "att": false,
+            "dx": -10.9,
+            "y": 5.6
+          },
+          {
+            "lab": "WR",
+            "t": "wr",
+            "att": false,
+            "dx": 9.4,
+            "y": 5.4
+          },
+          {
+            "lab": "WR",
+            "t": "wr",
+            "att": false,
+            "dx": 19.8,
+            "y": 6.7
+          },
+          {
+            "lab": "QB",
+            "t": "qb",
+            "att": false,
+            "dx": -0.1,
+            "y": 3.5
+          },
+          {
+            "lab": "RB",
+            "t": "rb",
+            "att": false,
+            "dx": -0.2,
+            "y": 0.8
+          }
+        ],
+        "routes": {
+          "5": [
+            [
+              -19,
+              21.4
+            ]
+          ],
+          "6": [
+            [
+              -10.9,
+              12.6
+            ],
+            [
+              -1.1,
+              21.9
+            ]
+          ],
+          "7": [
+            [
+              9.5,
+              13.4
+            ],
+            [
+              10.1,
+              11.4
+            ]
+          ],
+          "8": [
+            [
+              19.4,
+              21.5
+            ]
+          ]
+        },
+        "routeTypes": {
+          "5": [
+            "route"
+          ],
+          "6": [
+            "route",
+            "route"
+          ],
+          "7": [
+            "route",
+            "route"
+          ],
+          "8": [
+            "route"
+          ]
+        },
+        "ball": null,
+        "handoff": null,
+        "quiz": false,
+        "defense": {},
+        "call": {
+          "front": "base43",
+          "cov": "Lion",
+          "line": "none"
+        },
+        "notes": "",
+        "coachNotes": ""
+      },
+      {
+        "name": "Spread Run",
+        "players": [
+          {
+            "lab": "C",
+            "t": "ol",
+            "att": false,
+            "dx": 0,
+            "y": 7
+          },
+          {
+            "lab": "G",
+            "t": "ol",
+            "att": false,
+            "dx": -2.4,
+            "y": 7
+          },
+          {
+            "lab": "G",
+            "t": "ol",
+            "att": false,
+            "dx": 2.4,
+            "y": 7
+          },
+          {
+            "lab": "T",
+            "t": "ol",
+            "att": false,
+            "dx": -4.8,
+            "y": 7
+          },
+          {
+            "lab": "T",
+            "t": "ol",
+            "att": false,
+            "dx": 4.8,
+            "y": 7
+          },
+          {
+            "lab": "WR",
+            "t": "wr",
+            "att": false,
+            "dx": -18,
+            "y": 7
+          },
+          {
+            "lab": "WR",
+            "t": "wr",
+            "att": false,
+            "dx": -10.9,
+            "y": 5.6
+          },
+          {
+            "lab": "WR",
+            "t": "wr",
+            "att": false,
+            "dx": 18.8,
+            "y": 5
+          },
+          {
+            "lab": "WR",
+            "t": "wr",
+            "att": false,
+            "dx": 18,
+            "y": 7
+          },
+          {
+            "lab": "QB",
+            "t": "qb",
+            "att": false,
+            "dx": -0.1,
+            "y": 3.5
+          },
+          {
+            "lab": "RB",
+            "t": "rb",
+            "att": false,
+            "dx": -0.2,
+            "y": 0.8
+          }
+        ],
+        "routes": {
+          "10": [
+            [
+              -1.3,
+              9
+            ]
+          ]
+        },
+        "routeTypes": {
+          "10": [
+            "run"
+          ]
+        },
+        "ball": null,
+        "handoff": null,
+        "quiz": false,
+        "defense": {},
+        "call": {
+          "front": "base43",
+          "cov": "Lion",
+          "line": "none"
+        },
+        "notes": "",
+        "coachNotes": ""
+      },
+      {
+        "name": "Spread Pass 1",
+        "players": [
+          {
+            "lab": "C",
+            "t": "ol",
+            "att": false,
+            "dx": 0,
+            "y": 7
+          },
+          {
+            "lab": "G",
+            "t": "ol",
+            "att": false,
+            "dx": -2.4,
+            "y": 7
+          },
+          {
+            "lab": "G",
+            "t": "ol",
+            "att": false,
+            "dx": 2.4,
+            "y": 7
+          },
+          {
+            "lab": "T",
+            "t": "ol",
+            "att": false,
+            "dx": -4.8,
+            "y": 7
+          },
+          {
+            "lab": "T",
+            "t": "ol",
+            "att": false,
+            "dx": 4.8,
+            "y": 7
+          },
+          {
+            "lab": "WR",
+            "t": "wr",
+            "att": false,
+            "dx": -18,
+            "y": 7
+          },
+          {
+            "lab": "WR",
+            "t": "wr",
+            "att": false,
+            "dx": -10.9,
+            "y": 5.6
+          },
+          {
+            "lab": "WR",
+            "t": "wr",
+            "att": false,
+            "dx": 15.5,
+            "y": 4.8
+          },
+          {
+            "lab": "WR",
+            "t": "wr",
+            "att": false,
+            "dx": 13.5,
+            "y": 7
+          },
+          {
+            "lab": "QB",
+            "t": "qb",
+            "att": false,
+            "dx": -0.1,
+            "y": 3.5
+          },
+          {
+            "lab": "RB",
+            "t": "rb",
+            "att": false,
+            "dx": -0.2,
+            "y": 0.8
+          }
+        ],
+        "routes": {
+          "5": [
+            [
+              -18.5,
+              17.1
+            ]
+          ],
+          "6": [
+            [
+              -11.5,
+              17
+            ]
+          ],
+          "7": [
+            [
+              14.5,
+              12
+            ],
+            [
+              23.1,
+              11.9
+            ]
+          ],
+          "8": [
+            [
+              13,
+              18.6
+            ]
+          ]
+        },
+        "routeTypes": {
+          "5": [
+            "route"
+          ],
+          "6": [
+            "route"
+          ],
+          "7": [
+            "route",
+            "route"
+          ],
+          "8": [
+            "route"
+          ]
+        },
+        "ball": null,
+        "handoff": null,
+        "quiz": false,
+        "defense": {},
+        "call": {
+          "front": "base43",
+          "cov": "Lion",
+          "line": "none"
+        },
+        "notes": "",
+        "coachNotes": ""
+      }
+    ]
   }
 };
 /*OPPONENTS_END*/
@@ -12868,11 +15553,12 @@ function defenseFor(frontKey, lineKey, covKey, off){
   // Rock & Roll and Bracket cancel the front — everybody goes to their own spot,
   // so Monster unwinds back to a four-man look before the coverage takes over.
   const standalone = covKey === "rockroll" || covKey === "bracket";
-  if(standalone && frontKey === "monster") frontKey = "base43";
+  const samIsDown = frontKey === "monster" || frontKey === "cougar";
+  if(standalone && samIsDown) frontKey = "base43";
 
   const out = [], push = (lab,t,pos,side)=>{ if(t) out.push({lab, x:t.x, y:t.y, pos, side}); };
-  // in Monster the Sam is a down lineman, so he goes on with the front
-  if(frontKey === "monster") push("S", solveAlignment(frontKey, lineKey, off, "Sam", null), "Sam");
+  // in Monster and Cougar the Sam is a down lineman, so he goes on with the front
+  if(!standalone && samIsDown) push("S", solveAlignment(frontKey, lineKey, off, "Sam", null), "Sam");
   push("E", solveAlignment(frontKey, lineKey, off, "D. End", "strong"), "D. End", "strong");
   push("E", solveAlignment(frontKey, lineKey, off, "D. End", "weak"),   "D. End", "weak");
   push("T", solveAlignment(frontKey, lineKey, off, "D. Tackle", "strong"), "D. Tackle", "strong");
@@ -12888,13 +15574,18 @@ function defenseFor(frontKey, lineKey, covKey, off){
     const t = solveAlignment(frontKey, lineKey, off, pos, null);
     return (t && (t.x-off.ball)*off.strength > 0) ? "playside" : "away";
   };
+  /* Cougar carries its own secondary — the pressed corner and the safety 8 deep
+     inside him are part of the front, so a coverage doesn't get to move them. */
+  const ownsSecondary = frontKey === "cougar" && !standalone;
   const spot = (pos, frontSide, covSide) =>
-    (CA && CA.pos[pos]) ? CA.pos[pos](off, covSide) : solveAlignment(frontKey, lineKey, off, pos, frontSide);
+    (CA && CA.pos[pos] && !(ownsSecondary && (pos === "Corner" || pos === "Safety")))
+      ? CA.pos[pos](off, covSide)
+      : solveAlignment(frontKey, lineKey, off, pos, frontSide);
 
   push("M", spot("Mike"), "Mike");
   push("W", spot("Will"), "Will");
   push("B", spot("Bandit", null, sideOf("Bandit")), "Bandit", sideOf("Bandit"));
-  if(frontKey !== "monster") push("S", spot("Sam"), "Sam");
+  if(standalone || !samIsDown) push("S", spot("Sam"), "Sam");
   push("C",  spot("Corner", "strong", "playside"), "Corner", "playside");
   push("C",  spot("Corner", "weak",   "away"),     "Corner", "away");
   push("FS", spot("Safety", null, sideOf("Safety")), "Safety", sideOf("Safety"));
@@ -13010,7 +15701,7 @@ function renderBuilder(){
       // Flex sticks whether it was called before the roll or after it.
       // In Monster it's the weak end and the Sam; everywhere else, both ends.
       if(hasLine(playLine,"flex") || hasLine(l.key,"flex")){
-        if(playFront === "monster"){
+        if(playFront === "monster" || playFront === "cougar"){
           if(p.pos === "Sam" || (p.pos === "D. End" && p.side === "weak")) job = "Flex";
         } else if(p.pos === "D. End") job = "Flex";
       }
